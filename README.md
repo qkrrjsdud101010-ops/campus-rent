@@ -41,7 +41,7 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 
 | 구분 | 계획 및 현황 |
 | --- | --- |
-| 최종 Frontend | HTML, CSS, JavaScript, Thymeleaf (계획) |
+| 최종 Frontend | HTML·CSS·JavaScript 화면 1차 구현, Thymeleaf 템플릿 배치 준비 (엔진 연동 예정) |
 | 화면 시연 | Figma Make, React, TypeScript, Tailwind CSS, Vite |
 | Backend | Java, Spring Boot (계획) |
 | Database | Oracle Database (계획) |
@@ -64,33 +64,39 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 
 | 산출물 | 내용 | 저장 위치(예시) |
 | --- | --- | --- |
-| 프로젝트 계획서 | 목적·범위·기능·역할·일정 | [`PROJECT.md`](PROJECT.md) |
+| 프로젝트 계획서 | 목적·범위·기능·역할·일정 | [`New-Era_PROJECT.md`](docs/New-Era_PROJECT.md) |
 | Use Case | 사용자별 기능과 시스템 요구사항 | `docs/usecase/` |
 | 논리·물리 ERD | 데이터 구조 및 관계 | `docs/erd/` |
-| 화면설계 | 화면 흐름 및 UI 설계 자료 | `docs/ui/` |
+| 화면설계·구현 안내 | 원본 Make ZIP, 화면 구현 범위·실행·검증 | [`docs/ui/README.md`](docs/ui/README.md) |
+| 대화·작업 기록 | Figma 연결·화면 우선 개발 결정·구현·검증 요약 | [`2026-10-27-session.md`](docs/worklogs/2026-10-27-session.md) |
 | Figma Make | 화면 프로토타입 | https://www.figma.com/make/nbkwN4laz5mMem3FhP5xxj/Implement-CampusRent-Home-Screen--%EB%B3%B5%EC%82%AC-?t=I3fMwnQrBf6387yP-1 |
 
-## 7. 프로젝트 폴더 구조 예시
+## 7. 프로젝트 폴더 구조
 
 ```text
-hnu-information-project/
+campus-rent/
 ├── README.md
-├── PROJECT.md
 ├── .gitignore
+├── preview.cmd         # JDK로 로컬 화면 미리보기 실행
 ├── docs/
+│   ├── New-Era_PROJECT.md
 │   ├── usecase/
 │   ├── erd/
 │   └── ui/
-└── src/               # 구현 소스코드 (개발 단계에서 구성)
+├── src/main/resources/
+│   ├── templates/index.html
+│   └── static/         # CSS·JavaScript·원본 SVG·로컬 폰트
+└── tools/              # 로컬 미리보기 서버·화면 검증
 ```
 
-> 이 폴더 구조는 수업용 예시입니다. 팀별 산출물과 확정된 기술 스택에 맞춰 수정하며, 실제 파일 업로드 후 문서 링크를 연결합니다.
+> 현재는 화면 구현 단계입니다. Spring Boot 애플리케이션과 Oracle 연결은 후속 작업입니다.
 
 ## 8. 진행 현황
 
 - [x] 프로젝트 계획서 작성 및 핵심 기능 정의
 - [x] 요구사항 분석 및 Use Case 작성
 - [x] Figma Make 화면 시연·설계
+- [x] Make ZIP 기반 HTML·CSS·JavaScript 화면 1차 전환 및 로컬 미리보기
 - [x] 논리·물리 ERD 초안 작성 (최종 검토 필요)
 - [ ] 개발·바이브 코딩 도구 및 협업 방식 확정
 - [ ] GitHub 문서 구조화 및 팀원별 Clone 확인
@@ -99,10 +105,30 @@ hnu-information-project/
 
 ## 9. 개발 준비 및 협업
 
-1. `PROJECT.md`, Use Case, ERD, Figma Make 자료를 저장소에 정리합니다.
+1. `docs/New-Era_PROJECT.md`, Use Case, ERD, Figma Make 자료를 저장소에 정리합니다.
 2. 팀별 개발 도구와 역할 분담을 협의하고 README를 갱신합니다.
 3. 팀원들이 저장소를 Clone하여 동일한 분석·설계 문서를 공유합니다.
 4. 기능 구현 시 Use Case·ERD·화면설계의 명칭과 범위를 일치시킵니다.
 5. 구현·검증 결과에 따라 문서와 소스코드를 함께 업데이트합니다.
 
 **주의:** 화면 시연 구현과 최종 서버·DB 연동 완료는 구분합니다. 이 README의 기능 목록은 프로젝트 목표를 포함하며 전체 기능 구현 완료를 의미하지 않습니다.
+
+## 10. 화면 미리보기 실행
+
+JDK 8 이상(`java`, `javac`가 PATH에 등록된 환경)에서 저장소 루트의 터미널로 실행합니다. npm 패키지나 Oracle 설치는 필요하지 않습니다.
+
+```powershell
+.\preview.cmd
+```
+
+브라우저에서 [http://127.0.0.1:8080](http://127.0.0.1:8080)을 엽니다. 종료는 실행한 터미널에서 `Ctrl+C`입니다. 이 명령은 화면 확인용 Java 서버를 실행합니다. 최종 Spring Boot 서버는 아직 구성하지 않았습니다.
+
+홈, 장비·시설 대여, 목적별 추천, 선택 목록·최종 신청, 학생 신청 현황·과거 내역, 로그인·학생 회원가입, 관리자 승인·검수·시설 이용 처리를 시연할 수 있습니다. 가상 신청은 해당 브라우저의 IndexedDB에 저장합니다. 로그인·시연 회원가입 계정은 새로고침 시 초기화되며, 실제 계정 인증·서버 권한 검사·Oracle 저장은 후속 연동 대상입니다.
+
+| 구분 | 시연 이메일 | 시연 비밀번호 |
+| --- | --- | --- |
+| 학생 | `demo@campusrent.example` | `Campus123!` |
+| 다른 학생 | `other@campusrent.example` | `Campus123!` |
+| 관리자 | `admin@campusrent.example` | `CampusAdmin123!` |
+
+구현 범위와 검증 방법은 [화면 구현 안내](docs/ui/README.md)를 확인합니다.

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="description" content="활동 목적에 맞는 교내 시설과 장비를 찾고 대여·예약을 신청하세요.">
+  <title>CampusRent · 교내 시설·장비 대여</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/9dd8c.svg" th:href="@{/assets/9dd8c.svg}">
+  <link rel="stylesheet" href="/css/campus.css" th:href="@{/css/campus.css}">
+  <script type="module" src="/js/app.js" th:src="@{/js/app.js}"></script>
+</head>
+<body>
+  <a href="#page" class="skip-link">본문으로 바로가기</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="brand" aria-label="CampusRent 메인" data-link>
+        <span class="brand-icon"><img src="/assets/9dd8c.svg" alt=""></span>
+        <span>Campus<span class="brand-accent">Rent</span></span>
+      </a>
+      <nav aria-label="주요 메뉴" class="main-nav">
+        <a href="/equipment" data-link>장비 대여</a>
+        <a href="/facilities" data-link>시설 대여</a>
+        <a href="/purpose" data-link>목적별 대여</a>
+      </nav>
+      <div id="account-menu" class="account-menu"></div>
+    </div>
+  </header>
+  <main id="page" tabindex="-1" aria-label="주요 내용"></main>
+  <footer class="site-footer"><div class="footer-inner">
+    <a href="/" class="brand footer-brand" data-link>Campus<span class="brand-accent">Rent</span></a>
+    <p>New-Era · 교내 시설·장비 대여 및 관리 시스템</p>
+    <p class="copyright">© 2026 CampusRent (New-Era). All rights reserved.</p>
+  </div></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><p class="info-banner">화면 시연을 이용하려면 브라우저의 JavaScript를 활성화해 주세요.</p></noscript>
+</body>
+</html>

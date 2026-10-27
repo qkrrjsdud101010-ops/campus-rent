@@ -1,0 +1,52 @@
+
+(async () => {
+const s = await import('/js/store.js');
+const {resources, initialConditions: c} = await import('/js/data.js');
+const pre=document.querySelector('#results'), log=[];
+const assert=(v,m)=>{if(!v)throw Error(m)};
+const test=async(n,f)=>{await f();log.push('PASS '+n);pre.textContent=log.join('\n')};
+const fail=async(f,p)=>{try{await f()}catch(e){assert(!p||p.test(e.message),'Unexpected error: '+e.message);return}throw Error('Action should have failed')};
+const student=()=>s.login('demo@campusrent.example','Campus123!');
+const admin=()=>s.login('admin@campusrent.example','CampusAdmin123!');
+const item=n=>s.getState().records.find(r=>r.number===n)?.items[0];
+const details=(n,x={})=>({expectedVersion:item(n).version,expectedEquipmentVersion:s.getState().equipmentStates[item(n).resourceId]?.version??0,...x});
+const rows=id=>resources.find(r=>r.id===id).components.map(r=>({componentId:r.componentId,quantity:r.requiredQuantity,condition:'정상',confirmed:true,note:''}));
+const create=async(id,condition=c)=>{s.clearSelection();s.toggleSelection(id,condition);return s.submitSelection()};
+const act=(n,a,x={})=>s.processItem(n,item(n).id,a,details(n,x));
+try{
+await s.ready;
+await test('실제 IndexedDB 연결',()=>assert(!s.getState().storageError,s.getState().storageError));
+await test('잘못된 로그인 거절',()=>fail(()=>s.login('demo@campusrent.example','wrong'),/비밀번호/));
+await test('회원가입은 학생 권한만 생성',async()=>assert((await s.signup({name:'검증 사용자',email:'check@campusrent.example',password:'Test12345!'})).role==='student','Wrong signup role'));
+await student();let cancel;
+await test('최종 제출은 승인 대기와 선택 초기화',async()=>{cancel=await create('mic02');assert(item(cancel.number).status==='승인 대기'&&!s.getState().selection.length,'Pending/save selection failed')});
+await test('학생의 관리자 처리 차단',()=>fail(()=>act(cancel.number,'approve'),/관리자/));
+await test('다른 학생의 취소 차단',async()=>{await s.login('other@campusrent.example','Campus123!');await fail(()=>s.cancelItem(cancel.number,item(cancel.number).id,0),/본인의/)});
+await student();
+await test('본인 승인 전 취소',async()=>{await s.cancelItem(cancel.number,item(cancel.number).id,0);assert(item(cancel.number).status==='신청 취소 완료','Cancel failed')});
+await admin();
+await test('취소 신청의 재승인 차단',()=>fail(()=>act(cancel.number,'approve'),/승인 대기/));
+await student();const a=await create('cam01'),b=await create('cam01');await admin();let n;
+await test('경쟁 승인 한 건만 트랜잭션 저장',async()=>{const result=await Promise.allSettled([act(a.number,'approve'),act(b.number,'approve')]);assert(result.filter(r=>r.status==='fulfilled').length===1&&result.filter(r=>r.status==='rejected').length===1,'Duplicate approvals');n=[a,b].find(r=>item(r.number).status==='승인·수령 대기').number});
+await test('오래된 항목 버전 거절',()=>fail(()=>s.processItem(n,item(n).id,'checkout',{expectedVersion:0,components:rows('cam01')}),/다른 창/));
+await test('미확인 출고의 부분 저장 차단',async()=>{const data=rows('cam01');data[0].confirmed=false;await fail(()=>act(n,'checkout',{components:data}),/확인/);assert(!item(n).checkoutComponents,'Partial snapshot saved')});
+await test('출고 기준과 대여 중 상태 보존',async()=>{await act(n,'checkout',{components:rows('cam01')});assert(item(n).status==='대여 중'&&item(n).checkoutComponents.every(r=>r.quantity===1&&r.confirmed),'Checkout failed')});
+await test('기본 구성품 변경과 과거 출고 기준 분리',()=>{const def=resources.find(r=>r.id==='cam01').components[0],q=def.requiredQuantity;def.requiredQuantity=9;assert(item(n).checkoutComponents[0].requiredQuantity===q,'Snapshot changed');def.requiredQuantity=q});
+await student();
+await test('학생 반납 신청과 실제 완료 분리',async()=>{await s.requestReturn(n,item(n).id,item(n).version);assert(item(n).status==='반납 신청','Premature completion')});
+await admin();
+await test('누락 반환은 보류와 장비 점검 기록',async()=>{const data=rows('cam01');data.find(r=>r.componentId==='camera-battery').quantity=0;await act(n,'return',{components:data,reason:'배터리 누락'});assert(item(n).status==='반납 보류'&&s.getState().equipmentStates.cam01.status==='점검','Missing hold/restriction')});
+await test('추가 반환의 누적 초과 차단',()=>fail(()=>act(n,'return-extra',{components:[{componentId:'camera-battery',quantity:2,condition:'정상',confirmed:true}]}),/초과/));
+await test('미반환 구성품 입력 누락 차단',()=>fail(()=>act(n,'return-extra',{components:[]}),/이번 반환/));
+await test('부족 구성품만 추가 확인하여 같은 건 완료',async()=>{await act(n,'return-extra',{components:[{componentId:'camera-battery',quantity:1,condition:'정상',confirmed:true,note:''}]});assert(item(n).status==='반납 완료'&&item(n).inspections.length===2,'Extra return failed');assert(Object.values(item(n).returnedComponents).every(q=>q===1),'Double count');assert(s.getState().equipmentStates.cam01.status==='점검','Premature release')});
+await test('명시적 점검 완료 후 제한 해제',async()=>{await act(n,'maintenance-done',{reason:'전체 반환 및 작동 점검 완료',confirmed:true});assert(s.getState().equipmentStates.cam01.status==='정상','Maintenance not completed')});
+await test('장비 상태의 오래된 버전 거절',async()=>{const old=s.getState().equipmentStates.cam01.version;await act(n,'maintenance-required',{reason:'추가 점검',confirmed:true});await fail(()=>s.processItem(n,item(n).id,'maintenance-done',{...details(n,{reason:'과거 확인',confirmed:true}),expectedEquipmentVersion:old}),/다른 창/);await act(n,'maintenance-done',{reason:'재점검 완료',confirmed:true})});
+await student();const facility=await create('room02',{...c,people:6,use:'팀 회의'});await admin();
+await test('시설 승인·시작·종료와 실제 시각 기록',async()=>{for(const [action,status]of [['approve','예약 승인'],['start','이용 중'],['finish','이용 완료']]){await act(facility.number,action);assert(item(facility.number).status===status,'Facility transition failed')}assert(item(facility.number).startedAt&&item(facility.number).endedAt,'No actual timestamps')});
+await student();const rejected=await create('proj02');await admin();
+await test('거절 사유 필수 및 신청 소유자 보존',async()=>{await fail(()=>act(rejected.number,'reject'),/사유/);await act(rejected.number,'reject',{reason:'운영 일정 확인 필요'});const rec=s.getState().records.find(r=>r.number===rejected.number);assert(rec.userId==='demo-user'&&rec.items[0].reason==='운영 일정 확인 필요','Owner/reason mismatch')});
+await test('DB 새로 읽기 후 반환 회차·처리 이력 보존',async()=>{await s.refreshRecords();assert(item(n).inspections.length===2&&item(facility.number).history.length===3,'History not persisted')});
+await test('세션 저장소에 자격증명·프로필 없음',()=>{const values=Array.from({length:sessionStorage.length},(_,i)=>sessionStorage.getItem(sessionStorage.key(i))).join(' ');assert(!/Campus123|CampusAdmin123|demo-user|demo-admin|@campusrent/.test(values),'Credentials/profile persisted')});
+document.body.dataset.result='passed';log.push('\n'+log.length+' actual IndexedDB checks passed.');pre.textContent=log.join('\n');
+}catch(error){document.body.dataset.result='failed';log.push('FAIL '+error.message,error.stack||'');pre.textContent=log.join('\n')}
+})().catch(error => { document.body.dataset.result='failed'; document.querySelector('#results').textContent='IMPORT FAIL '+error.message; });
