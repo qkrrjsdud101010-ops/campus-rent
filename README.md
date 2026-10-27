@@ -68,7 +68,7 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 | Use Case | 사용자별 기능과 시스템 요구사항 | `docs/usecase/` |
 | 논리·물리 ERD | 데이터 구조 및 관계 | `docs/erd/` |
 | 화면설계 | 화면 흐름 및 UI 설계 자료 | `docs/ui/` |
-| Figma Make | 화면 프로토타입 | 팀 공유 링크 추가 |
+| Figma Make | 화면 프로토타입 | https://www.figma.com/make/nbkwN4laz5mMem3FhP5xxj/Implement-CampusRent-Home-Screen--%EB%B3%B5%EC%82%AC-?t=I3fMwnQrBf6387yP-1 |
 
 ## 7. 프로젝트 폴더 구조 예시
 
