@@ -112,6 +112,8 @@ campus-rent/
 
 ## 9. 개발 준비 및 협업
 
+**수정·공유 원칙:** 각자 VS Code에서 사용하는 로컬 작업 폴더의 파일을 수정하고, 로컬 Git으로 Commit·Push합니다. GitHub에 직접 로그인해 브라우저에서 파일을 수정하지 않습니다. AI 도구도 같은 로컬 저장소에서 작업합니다.
+
 1. `docs/New-Era_PROJECT.md`, Use Case, ERD, Figma Make 자료를 저장소에 정리합니다.
 2. 팀별 개발 도구와 역할 분담을 협의하고 README를 갱신합니다.
 3. 팀원들이 저장소를 Clone하여 동일한 분석·설계 문서를 공유합니다.
