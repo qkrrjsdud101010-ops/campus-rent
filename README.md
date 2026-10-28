@@ -69,7 +69,10 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 | 논리·물리 ERD | 데이터 구조 및 관계 | `docs/erd/` |
 | Oracle 11g SQL | ERD 기반 테이블·제약·시퀀스·검증 SQL | [`db/oracle11g/README.md`](db/oracle11g/README.md) |
 | 화면설계·구현 안내 | 원본 Make ZIP, 화면 구현 범위·실행·검증 | [`docs/ui/README.md`](docs/ui/README.md) |
+| 화면 개선 상세 설계 | 상태·개인 일정·시간표·관리자 조회·모바일 선택, ERD 연결·수용 기준 | [`CampusRent_UI_Improvement_Design.md`](docs/ui/CampusRent_UI_Improvement_Design.md) |
+| 개선 화면 검토안 | 브라우저로 여는 독립 화면 예시·클릭 동작, 실제 신청과 미연결 | [`campusrent-improvement-wireframes.html`](docs/ui/campusrent-improvement-wireframes.html) |
 | 대화·작업 기록 | Figma 연결·화면 우선 개발 결정·구현·검증 요약 | [`2026-10-27-session.md`](docs/worklogs/2026-10-27-session.md) |
+| 대화·작업 기록(10/28) | Oracle SQL·화면 개선 설계·학교 간편로그인 가능성 검토 | [`2026-10-28-session.md`](docs/worklogs/2026-10-28-session.md) |
 | Figma Make | 화면 프로토타입 | https://www.figma.com/make/nbkwN4laz5mMem3FhP5xxj/Implement-CampusRent-Home-Screen--%EB%B3%B5%EC%82%AC-?t=I3fMwnQrBf6387yP-1 |
 
 ## 7. 프로젝트 폴더 구조
@@ -101,6 +104,7 @@ campus-rent/
 - [x] Make ZIP 기반 HTML·CSS·JavaScript 화면 1차 전환 및 로컬 미리보기
 - [x] 논리·물리 ERD 초안 작성 (최종 검토 필요)
 - [x] ERD 기반 Oracle 11g SQL 작성 및 정적 대조 (실제 DB 실행 검증 필요)
+- [x] 화면·조회·안내 개선 7개 상세 설계 및 독립 화면 검토안 작성 (기존 앱 구현 예정)
 - [ ] 개발·바이브 코딩 도구 및 협업 방식 확정
 - [ ] GitHub 문서 구조화 및 팀원별 Clone 확인
 - [ ] 최종 서버·DB 연동 및 필수 기능 구현
