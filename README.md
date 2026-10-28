@@ -44,7 +44,7 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 | 최종 Frontend | HTML·CSS·JavaScript 화면 1차 구현, Thymeleaf 템플릿 배치 준비 (엔진 연동 예정) |
 | 화면 시연 | Figma Make, React, TypeScript, Tailwind CSS, Vite |
 | Backend | Java, Spring Boot (계획) |
-| Database | Oracle Database (계획) |
+| Database | Oracle Database 11g용 DDL 작성, 실제 DB 구축·실행 검증 예정 |
 | 데이터 접근 | MyBatis 또는 JDBC (협의 필요) |
 | 목적별 추천 | 등록된 키워드·용도·인원 조건에 따른 규칙 기반 |
 | 버전 관리 | Git / GitHub |
@@ -67,6 +67,7 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 | 프로젝트 계획서 | 목적·범위·기능·역할·일정 | [`New-Era_PROJECT.md`](docs/New-Era_PROJECT.md) |
 | Use Case | 사용자별 기능과 시스템 요구사항 | `docs/usecase/` |
 | 논리·물리 ERD | 데이터 구조 및 관계 | `docs/erd/` |
+| Oracle 11g SQL | ERD 기반 테이블·제약·시퀀스·검증 SQL | [`db/oracle11g/README.md`](db/oracle11g/README.md) |
 | 화면설계·구현 안내 | 원본 Make ZIP, 화면 구현 범위·실행·검증 | [`docs/ui/README.md`](docs/ui/README.md) |
 | 대화·작업 기록 | Figma 연결·화면 우선 개발 결정·구현·검증 요약 | [`2026-10-27-session.md`](docs/worklogs/2026-10-27-session.md) |
 | Figma Make | 화면 프로토타입 | https://www.figma.com/make/nbkwN4laz5mMem3FhP5xxj/Implement-CampusRent-Home-Screen--%EB%B3%B5%EC%82%AC-?t=I3fMwnQrBf6387yP-1 |
@@ -83,6 +84,7 @@ campus-rent/
 │   ├── usecase/
 │   ├── erd/
 │   └── ui/
+├── db/oracle11g/        # ERD 기반 Oracle 11g 설치·검증 SQL
 ├── src/main/resources/
 │   ├── templates/index.html
 │   └── static/         # CSS·JavaScript·원본 SVG·로컬 폰트
@@ -98,6 +100,7 @@ campus-rent/
 - [x] Figma Make 화면 시연·설계
 - [x] Make ZIP 기반 HTML·CSS·JavaScript 화면 1차 전환 및 로컬 미리보기
 - [x] 논리·물리 ERD 초안 작성 (최종 검토 필요)
+- [x] ERD 기반 Oracle 11g SQL 작성 및 정적 대조 (실제 DB 실행 검증 필요)
 - [ ] 개발·바이브 코딩 도구 및 협업 방식 확정
 - [ ] GitHub 문서 구조화 및 팀원별 Clone 확인
 - [ ] 최종 서버·DB 연동 및 필수 기능 구현

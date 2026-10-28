@@ -63,7 +63,7 @@ node tools/check-ui-browser.mjs
 
 1. 화면 검토 결과를 반영합니다.
 2. JDK·Spring Boot 버전과 MyBatis/JDBC 방식을 팀 기준으로 확정합니다.
-3. ERD를 읽어 Oracle 테이블·제약조건·초기 데이터 SQL을 작성하고 검증합니다.
+3. [ERD 기반 Oracle 11g SQL](../../db/oracle11g/README.md)을 실제 DB에서 검증하고, 확정한 코드 규약·초기 데이터를 반영합니다.
 4. Spring MVC·Thymeleaf, 서버 세션·권한, 서비스·DAO를 연결합니다. `store.js`의 시연 저장 기능을 서버 호출로 전환하되 화면 입력·처리 상태를 유지합니다.
 5. 승인 경쟁·검수 상태 변경을 실제 DB 트랜잭션으로 구현하고 통합 검증합니다.
 
