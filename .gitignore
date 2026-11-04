@@ -25,3 +25,13 @@ replay_pid*
 
 # Local reference extraction, preview builds and verification artifacts
 .work/
+
+# Local database configuration and credentials
+/src/main/resources/application-local.properties
+/src/main/resources/application-local.yml
+/src/main/resources/application-local.yaml
+.env
+.env.*
+!.env.example
+/target/
+/build/

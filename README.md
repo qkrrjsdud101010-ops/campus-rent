@@ -41,11 +41,11 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 
 | 구분 | 계획 및 현황 |
 | --- | --- |
-| 최종 Frontend | HTML·CSS·JavaScript 화면 1차 구현, Thymeleaf 템플릿 배치 준비 (엔진 연동 예정) |
+| 최종 Frontend | HTML·CSS·JavaScript·Thymeleaf, 실제 서버 화면 연동 |
 | 화면 시연 | Figma Make, React, TypeScript, Tailwind CSS, Vite |
-| Backend | Java, Spring Boot (계획) |
-| Database | Oracle Database 11g용 DDL 작성, 실제 DB 구축·실행 검증 예정 |
-| 데이터 접근 | MyBatis 또는 JDBC (협의 필요) |
+| Backend | Java 21·Spring Boot 4.1.2·Spring Security (전용 런타임, 시스템 Java 8 유지) |
+| Database | Oracle 11g XE 테이블 26개·시퀀스 17개, 실제 인증·신청·검수 API 연동 |
+| 데이터 접근 | Spring JDBC JdbcTemplate·HikariCP·서비스 트랜잭션 |
 | 목적별 추천 | 등록된 키워드·용도·인원 조건에 따른 규칙 기반 |
 | 버전 관리 | Git / GitHub |
 | 개발·바이브 코딩 도구 | 팀 협의 후 확정 |
@@ -68,11 +68,14 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 | Use Case | 사용자별 기능과 시스템 요구사항 | `docs/usecase/` |
 | 논리·물리 ERD | 데이터 구조 및 관계 | `docs/erd/` |
 | Oracle 11g SQL | ERD 기반 테이블·제약·시퀀스·검증 SQL | [`db/oracle11g/README.md`](db/oracle11g/README.md) |
+| Oracle 로컬 연결 | Java 8 JDBC 접속 검사·Git 제외 설정·객체명 확인 절차 | [`db/oracle11g/CONNECT.md`](db/oracle11g/CONNECT.md) |
+| 서버 실행·검증 | JDK·Spring·인증·API·초기 데이터·테스트 | [`SERVER.md`](docs/SERVER.md) |
 | 화면설계·구현 안내 | 원본 Make ZIP, 화면 구현 범위·실행·검증 | [`docs/ui/README.md`](docs/ui/README.md) |
 | 화면 개선 상세 설계 | 상태·개인 일정·시간표·관리자 조회·모바일 선택, ERD 연결·수용 기준 | [`CampusRent_UI_Improvement_Design.md`](docs/ui/CampusRent_UI_Improvement_Design.md) |
 | 개선 화면 검토안 | 브라우저로 여는 독립 화면 예시·클릭 동작, 실제 신청과 미연결 | [`campusrent-improvement-wireframes.html`](docs/ui/campusrent-improvement-wireframes.html) |
 | 대화·작업 기록 | Figma 연결·화면 우선 개발 결정·구현·검증 요약 | [`2026-10-27-session.md`](docs/worklogs/2026-10-27-session.md) |
 | 대화·작업 기록(10/28) | Oracle SQL·화면 개선 설계·학교 간편로그인 가능성 검토 | [`2026-10-28-session.md`](docs/worklogs/2026-10-28-session.md) |
+| 대화·작업 기록(11/04) | 수업 Oracle 접속 준비·로컬 비밀 설정·실제 검사 결과 | [`2026-11-04-session.md`](docs/worklogs/2026-11-04-session.md) |
 | Figma Make | 화면 프로토타입 | https://www.figma.com/make/nbkwN4laz5mMem3FhP5xxj/Implement-CampusRent-Home-Screen--%EB%B3%B5%EC%82%AC-?t=I3fMwnQrBf6387yP-1 |
 
 ## 7. 프로젝트 폴더 구조
@@ -81,20 +84,24 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 campus-rent/
 ├── README.md
 ├── .gitignore
-├── preview.cmd         # JDK로 로컬 화면 미리보기 실행
+├── pom.xml             # Spring Boot·JdbcTemplate·Security
+├── run-server.cmd      # 실제 Oracle 개발 서버, 8081
+├── preview.cmd         # 독립 화면 미리보기, 8080
 ├── docs/
 │   ├── New-Era_PROJECT.md
 │   ├── usecase/
 │   ├── erd/
 │   └── ui/
 ├── db/oracle11g/        # ERD 기반 Oracle 11g 설치·검증 SQL
+├── src/main/java/      # 인증·조회·신청·검수 서비스
+├── src/test/java/      # 핵심 업무 정책 테스트
 ├── src/main/resources/
 │   ├── templates/index.html
 │   └── static/         # CSS·JavaScript·원본 SVG·로컬 폰트
 └── tools/              # 로컬 미리보기 서버·화면 검증
 ```
 
-> 현재는 화면 구현 단계입니다. Spring Boot 애플리케이션과 Oracle 연결은 후속 작업입니다.
+> 실제 개발 서버에서 인증·신청·승인·출고·반납·시설 이용을 Oracle에 저장합니다. 관리 편집 화면·외부 배포 등은 후속 범위입니다.
 
 ## 8. 진행 현황
 
@@ -103,11 +110,13 @@ campus-rent/
 - [x] Figma Make 화면 시연·설계
 - [x] Make ZIP 기반 HTML·CSS·JavaScript 화면 1차 전환 및 로컬 미리보기
 - [x] 논리·물리 ERD 초안 작성 (최종 검토 필요)
-- [x] ERD 기반 Oracle 11g SQL 작성 및 정적 대조 (실제 DB 실행 검증 필요)
+- [x] ERD 기반 Oracle 11g SQL 작성·정적 대조 및 실제 테이블·시퀀스·트리거 생성
+- [x] 배정된 Oracle 11g XE 계정의 JDBC 접속·메타데이터·무결성 29개·롤백 CRUD 4개 검사
 - [x] 화면·조회·안내 개선 7개 상세 설계 및 독립 화면 검토안 작성 (기존 앱 구현 예정)
 - [ ] 개발·바이브 코딩 도구 및 협업 방식 확정
 - [ ] GitHub 문서 구조화 및 팀원별 Clone 확인
-- [ ] 최종 서버·DB 연동 및 필수 기능 구현
+- [x] Spring Boot·Thymeleaf·Oracle 핵심 업무 연동, API 20개·서버 화면 20개·단위 테스트 7개 검증
+- [ ] 남은 필수 관리 화면·UI 개선·외부 배포 구현
 - [ ] 통합 테스트, 배포 및 검증
 
 ## 9. 개발 준비 및 협업
@@ -122,7 +131,17 @@ campus-rent/
 
 **주의:** 화면 시연 구현과 최종 서버·DB 연동 완료는 구분합니다. 이 README의 기능 목록은 프로젝트 목표를 포함하며 전체 기능 구현 완료를 의미하지 않습니다.
 
-## 10. 화면 미리보기 실행
+## 10. 실제 개발 서버 실행
+
+이 PC는 실행 도구와 Oracle 로컬 설정 준비를 완료했습니다. 저장소 루트에서 실행하고 [개발 서버](http://127.0.0.1:8081)를 엽니다.
+
+```powershell
+.\run-server.cmd
+```
+
+학생은 화면에서 회원가입합니다. 관리자 로그인 정보는 Git 제외 `src/main/resources/application-local.properties`의 `campus.bootstrap.admin.email`·`campus.bootstrap.admin.password`에서 확인합니다. DB 로그인과 별개이며 공개 시연 계정은 서버에 적용되지 않습니다. 자세한 준비·테스트·패키징과 범위는 [서버 개발 안내](docs/SERVER.md)를 참조하세요.
+
+## 11. 독립 화면 미리보기 실행
 
 JDK 8 이상(`java`, `javac`가 PATH에 등록된 환경)에서 저장소 루트의 터미널로 실행합니다. npm 패키지나 Oracle 설치는 필요하지 않습니다.
 

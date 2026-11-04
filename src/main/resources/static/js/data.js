@@ -1,4 +1,7 @@
-// Figma Make 시연 데이터와 규칙을 원본에서 옮긴 ES module입니다.
+// 화면 공통 규칙입니다. 서버 모드의 자원·일정은 catalog API 응답으로 교체합니다.
+export const serverMode = typeof document !== "undefined" && document.documentElement.dataset.backend === "server";
+export const catalogState = { ready: !serverMode, error: "" };
+export const catalogRestrictions = {};
 export function participantAnalysis(
   input,
 ) {
@@ -382,15 +385,17 @@ export function availability(
   reservations = [],
   restrictions = {},
 ) {
+  if (serverMode && !catalogState.ready)
+    return [catalogState.error || "최신 자원 정보를 확인하지 못했습니다. 다시 불러온 뒤 이용 가능 여부를 확인해주세요."]
   if (!condition)
     return [
-      ...(resource.kind === "장비" && restrictions[resource.id]
+      ...(restrictions[resource.id]
         ? [restrictions[resource.id]]
         : []),
       "이용 기간 선택 후 확인할 수 있습니다.",
     ]
   const errors = conditionErrors(condition, resource.kind === "시설")
-  if (resource.kind === "장비" && restrictions[resource.id])
+  if (restrictions[resource.id])
     errors.push(restrictions[resource.id])
   if (!resource.rentable) errors.push("대여가 허용되지 않은 자산입니다.")
   if (resource.status !== "정상")
@@ -425,7 +430,7 @@ export function availability(
       new Date(condition.start) < new Date(booking.end) &&
       new Date(condition.end) > new Date(booking.start)
     )
-      errors.push(booking.reason)
+      errors.push(booking.reason || "승인된 신청 또는 운영 제한 시간과 겹칩니다.")
   if (
     reservations.some(
       (booking) =>
@@ -586,7 +591,7 @@ export function recommendationItems(
   restrictions = {},
   facilityPeople,
 ) {
-  const recommendation = recommendations[purpose]
+  const recommendation = recommendations[purpose] || { ids: [], roles: {}, optional: [] }
   const people = effectiveRecommendationPeople(
     analysis,
     facilityCondition,
@@ -728,4 +733,56 @@ export function alternateSlots(
     if (result.length === 8) break
   }
   return result
+}
+
+export function markCatalogUnavailable(message = "최신 자원 정보를 불러오지 못했습니다.") {
+  catalogState.ready = false;
+  catalogState.error = message;
+}
+
+export function replaceCatalog(payload) {
+  if (!payload || !Array.isArray(payload.resources) || !Array.isArray(payload.purposes) || !Array.isArray(payload.reservations))
+    throw new Error("서버의 자원 목록 응답을 확인할 수 없습니다.");
+  const ids = new Set();
+  const nextResources = payload.resources.map(resource => {
+    if (!resource || typeof resource.id !== "string" || !resource.id || ids.has(resource.id) || !["장비", "시설"].includes(resource.kind) || typeof resource.name !== "string" || typeof resource.rentable !== "boolean" || !["정상", "점검", "중지"].includes(resource.status))
+      throw new Error("서버의 자원 정보가 올바르지 않습니다. 관리자에게 확인해주세요.");
+    ids.add(resource.id);
+    if (resource.kind === "시설" && (!Number.isSafeInteger(resource.capacity) || resource.capacity < 1 || !Array.isArray(resource.operatingHours) || resource.operatingHours.length !== 2 || resource.operatingHours.some(time => !/^\d{2}:\d{2}$/.test(time))))
+      throw new Error("시설의 인원·운영 시간 정보를 확인할 수 없습니다.");
+    const stringList = value => Array.isArray(value) ? value.filter(item => typeof item === "string") : [];
+    const fallbackIcon = resource.kind === "시설" ? "8f64d.svg" : resource.category === "마이크" ? "054e2.svg" : resource.category === "프로젝터" ? "1eae3.svg" : "ff97a.svg";
+    return {
+      ...resource,
+      category: String(resource.category || resource.kind), code: String(resource.code || resource.id),
+      model: String(resource.model || ""), location: String(resource.location || ""),
+      specs: stringList(resource.specs), contents: stringList(resource.contents), alternatives: stringList(resource.alternatives),
+      allowedUses: stringList(resource.allowedUses),
+      ...(Array.isArray(resource.components) ? { components: resource.components.map(component => ({ ...component })) } : {}),
+      icon: typeof resource.icon === "string" && /^[a-z0-9_.-]+\.(svg|png|webp|jpg|jpeg)$/i.test(resource.icon) ? resource.icon : fallbackIcon,
+    };
+  });
+  const nextPurposes = [...new Set(payload.purposes.filter(purpose => typeof purpose === "string" && purpose.trim()).map(purpose => purpose.trim()))];
+  const nextBookings = payload.reservations.map(booking => {
+    if (!booking || typeof booking.resourceId !== "string" || typeof booking.start !== "string" || typeof booking.end !== "string" || !Number.isFinite(new Date(booking.start).getTime()) || new Date(booking.end) <= new Date(booking.start))
+      throw new Error("이용 제한 일정 응답을 확인할 수 없습니다.");
+    return { resourceId: booking.resourceId, start: booking.start, end: booking.end, approved: true, reason: String(booking.reason || "승인된 신청 또는 운영 제한 시간과 겹칩니다.") };
+  });
+  const nextRestrictions = {};
+  if (payload.restrictions && (typeof payload.restrictions !== "object" || Array.isArray(payload.restrictions)))
+    throw new Error("자원 운영 상태 응답을 확인할 수 없습니다.");
+  for (const [id, reason] of Object.entries(payload.restrictions || {})) if (typeof reason === "string" && reason) nextRestrictions[id] = reason;
+  resources.splice(0, resources.length, ...nextResources);
+  purposes.splice(0, purposes.length, ...nextPurposes);
+  bookings.splice(0, bookings.length, ...nextBookings);
+  for (const id of Object.keys(catalogRestrictions)) delete catalogRestrictions[id];
+  Object.assign(catalogRestrictions, nextRestrictions);
+  catalogState.ready = true;
+  catalogState.error = "";
+}
+
+if (serverMode) {
+  resources.splice(0);
+  purposes.splice(0);
+  bookings.splice(0);
 }

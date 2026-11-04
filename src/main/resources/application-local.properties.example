@@ -1,0 +1,17 @@
+# Copy to application-local.properties (Git ignored), then fill in your assigned account.
+# SID syntax: jdbc:oracle:thin:@HOST:PORT:SID (not service-name syntax).
+spring.datasource.url=jdbc:oracle:thin:@YOUR_DB_HOST:YOUR_DB_PORT:YOUR_DB_SID
+spring.datasource.username=YOUR_TEAM_USER
+spring.datasource.password=
+spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
+
+# Never initialize or alter the schema automatically on application startup.
+spring.sql.init.mode=never
+spring.jpa.hibernate.ddl-auto=none
+
+# Optional first-run application administrator. This is separate from the DB login.
+# Fill in private values locally, enable only for the first run, then set flags false.
+campus.bootstrap.enabled=false
+campus.bootstrap.admin.email=
+campus.bootstrap.admin.password=
+campus.seed-demo-catalog=false

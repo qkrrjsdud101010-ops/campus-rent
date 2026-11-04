@@ -1,0 +1,511 @@
+{
+  "resources": [
+    {
+      "id": "cam01",
+      "name": "이동형 디지털카메라 고정 세트 A",
+      "category": "카메라",
+      "model": "DEMO-CAM100",
+      "specs": [
+        "영상 4K / 30fps",
+        "기본 렌즈 24–70mm"
+      ],
+      "contents": [
+        "카메라 본체 1개",
+        "기본 렌즈 1개",
+        "배터리 1개",
+        "충전기 1개"
+      ],
+      "components": [
+        {
+          "componentId": "camera-body",
+          "name": "카메라 본체",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": true
+        },
+        {
+          "componentId": "camera-lens",
+          "name": "기본 렌즈",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "camera-battery",
+          "name": "배터리",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "camera-charger",
+          "name": "충전기",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        }
+      ],
+      "alternatives": [
+        "cam02"
+      ],
+      "kind": "장비",
+      "code": "DEMO-CAM01",
+      "location": "시연 자산 보관실",
+      "icon": "ff97a.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "cam02",
+      "name": "이동형 디지털카메라 고정 세트 B",
+      "category": "카메라",
+      "model": "DEMO-CAM200",
+      "specs": [
+        "영상 1080p / 60fps",
+        "기본 렌즈 18–55mm"
+      ],
+      "contents": [
+        "카메라 본체 1개",
+        "기본 렌즈 1개",
+        "배터리 1개",
+        "충전기 1개"
+      ],
+      "components": [
+        {
+          "componentId": "camera-body",
+          "name": "카메라 본체",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": true
+        },
+        {
+          "componentId": "camera-lens",
+          "name": "기본 렌즈",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "camera-battery",
+          "name": "배터리",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "camera-charger",
+          "name": "충전기",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        }
+      ],
+      "alternatives": [],
+      "kind": "장비",
+      "code": "DEMO-CAM02",
+      "location": "시연 자산 보관실",
+      "icon": "ff97a.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "proj01",
+      "name": "이동형 빔프로젝터 고정 세트 A",
+      "category": "프로젝터",
+      "model": "DEMO-PJ100",
+      "specs": [
+        "해상도 1920×1080",
+        "입력 HDMI"
+      ],
+      "contents": [
+        "프로젝터 본체 1개",
+        "HDMI 케이블 1개",
+        "전원 케이블 1개",
+        "리모컨 1개"
+      ],
+      "components": [
+        {
+          "componentId": "projector-body",
+          "name": "프로젝터 본체",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": true
+        },
+        {
+          "componentId": "projector-hdmi",
+          "name": "HDMI 케이블",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "projector-power",
+          "name": "전원 케이블",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "projector-remote",
+          "name": "리모컨",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        }
+      ],
+      "alternatives": [
+        "proj02"
+      ],
+      "kind": "장비",
+      "code": "DEMO-PROJ01",
+      "location": "시연 자산 보관실",
+      "icon": "1eae3.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "proj02",
+      "name": "이동형 빔프로젝터 고정 세트 B",
+      "category": "프로젝터",
+      "model": "DEMO-PJ200",
+      "specs": [
+        "해상도 1280×800",
+        "입력 HDMI"
+      ],
+      "contents": [
+        "프로젝터 본체 1개",
+        "HDMI 케이블 1개",
+        "전원 케이블 1개",
+        "리모컨 1개"
+      ],
+      "components": [
+        {
+          "componentId": "projector-body",
+          "name": "프로젝터 본체",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": true
+        },
+        {
+          "componentId": "projector-hdmi",
+          "name": "HDMI 케이블",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "projector-power",
+          "name": "전원 케이블",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "projector-remote",
+          "name": "리모컨",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        }
+      ],
+      "alternatives": [],
+      "kind": "장비",
+      "code": "DEMO-PROJ02",
+      "location": "시연 자산 보관실",
+      "icon": "1eae3.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "mic01",
+      "name": "무선 마이크 고정 세트 A",
+      "category": "마이크",
+      "model": "DEMO-MIC100",
+      "specs": [
+        "녹음 1채널",
+        "출력 3.5mm"
+      ],
+      "contents": [
+        "마이크 1개",
+        "수신기 1개",
+        "전원 어댑터 1개"
+      ],
+      "components": [
+        {
+          "componentId": "microphone-body",
+          "name": "마이크",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": true
+        },
+        {
+          "componentId": "microphone-receiver",
+          "name": "수신기",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "microphone-adapter",
+          "name": "전원 어댑터",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        }
+      ],
+      "alternatives": [
+        "mic02",
+        "mic03"
+      ],
+      "kind": "장비",
+      "code": "DEMO-MIC01",
+      "location": "시연 자산 보관실",
+      "icon": "054e2.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "mic02",
+      "name": "무선 마이크 고정 세트 B",
+      "category": "마이크",
+      "model": "DEMO-MIC200",
+      "specs": [
+        "녹음 2채널",
+        "출력 3.5mm"
+      ],
+      "contents": [
+        "마이크 2개",
+        "수신기 1개",
+        "전원 어댑터 1개"
+      ],
+      "components": [
+        {
+          "componentId": "microphone-body",
+          "name": "마이크",
+          "requiredQuantity": 2,
+          "required": true,
+          "body": true
+        },
+        {
+          "componentId": "microphone-receiver",
+          "name": "수신기",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        },
+        {
+          "componentId": "microphone-adapter",
+          "name": "전원 어댑터",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        }
+      ],
+      "alternatives": [],
+      "kind": "장비",
+      "code": "DEMO-MIC02",
+      "location": "시연 자산 보관실",
+      "icon": "054e2.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "mic03",
+      "name": "무선 마이크 고정 세트 C",
+      "category": "마이크",
+      "model": "DEMO-MIC300",
+      "specs": [
+        "사양 확인 필요"
+      ],
+      "contents": [
+        "마이크 1개",
+        "수신기 1개"
+      ],
+      "components": [
+        {
+          "componentId": "microphone-body",
+          "name": "마이크",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": true
+        },
+        {
+          "componentId": "microphone-receiver",
+          "name": "수신기",
+          "requiredQuantity": 1,
+          "required": true,
+          "body": false
+        }
+      ],
+      "alternatives": [],
+      "kind": "장비",
+      "code": "DEMO-MIC03",
+      "location": "시연 자산 보관실",
+      "icon": "054e2.svg",
+      "rentable": true,
+      "status": "점검"
+    },
+    {
+      "id": "room01",
+      "name": "시연 회의실 A",
+      "category": "회의실",
+      "capacity": 4,
+      "allowedUses": [
+        "팀 회의",
+        "발표 연습"
+      ],
+      "contents": [
+        "테이블",
+        "의자 4개",
+        "화이트보드"
+      ],
+      "location": "가상 캠퍼스 · A동 201호",
+      "kind": "시설",
+      "code": "DEMO-ROOM01",
+      "model": "가상 시설",
+      "specs": [
+        "수용 4명",
+        "공간 전체 예약"
+      ],
+      "operatingHours": [
+        "09:00",
+        "20:00"
+      ],
+      "alternatives": [],
+      "icon": "b46a5.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "room02",
+      "name": "시연 회의실 B",
+      "category": "회의실",
+      "capacity": 8,
+      "allowedUses": [
+        "팀 회의",
+        "발표 연습"
+      ],
+      "contents": [
+        "테이블",
+        "의자 8개",
+        "고정 전자칠판"
+      ],
+      "location": "가상 캠퍼스 · A동 202호",
+      "kind": "시설",
+      "code": "DEMO-ROOM02",
+      "model": "가상 시설",
+      "specs": [
+        "수용 8명",
+        "공간 전체 예약"
+      ],
+      "operatingHours": [
+        "09:00",
+        "20:00"
+      ],
+      "alternatives": [],
+      "icon": "b46a5.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "study01",
+      "name": "시연 스터디룸 B",
+      "category": "스터디룸",
+      "capacity": 6,
+      "allowedUses": [
+        "팀 회의",
+        "발표 연습"
+      ],
+      "contents": [
+        "테이블",
+        "의자 6개",
+        "고정 PC"
+      ],
+      "location": "가상 캠퍼스 · B동 101호",
+      "kind": "시설",
+      "code": "DEMO-STUDY01",
+      "model": "가상 시설",
+      "specs": [
+        "수용 6명",
+        "공간 전체 예약"
+      ],
+      "operatingHours": [
+        "09:00",
+        "20:00"
+      ],
+      "alternatives": [],
+      "icon": "b46a5.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "studio01",
+      "name": "시연 촬영실 A",
+      "category": "촬영실",
+      "capacity": 4,
+      "allowedUses": [
+        "인터뷰 촬영",
+        "과제 영상 촬영"
+      ],
+      "contents": [
+        "테이블",
+        "의자 4개",
+        "고정 조명"
+      ],
+      "location": "가상 캠퍼스 · C동 101호",
+      "kind": "시설",
+      "code": "DEMO-STUDIO01",
+      "model": "가상 시설",
+      "specs": [
+        "수용 4명",
+        "공간 전체 예약"
+      ],
+      "operatingHours": [
+        "09:00",
+        "20:00"
+      ],
+      "alternatives": [],
+      "icon": "b46a5.svg",
+      "rentable": true,
+      "status": "정상"
+    },
+    {
+      "id": "studio02",
+      "name": "시연 촬영실 B",
+      "category": "촬영실",
+      "capacity": 6,
+      "allowedUses": [
+        "인터뷰 촬영",
+        "과제 영상 촬영"
+      ],
+      "contents": [
+        "테이블",
+        "의자 6개",
+        "고정 조명",
+        "방음 설비"
+      ],
+      "location": "가상 캠퍼스 · C동 102호",
+      "kind": "시설",
+      "code": "DEMO-STUDIO02",
+      "model": "가상 시설",
+      "specs": [
+        "수용 6명",
+        "공간 전체 예약"
+      ],
+      "operatingHours": [
+        "09:00",
+        "20:00"
+      ],
+      "alternatives": [],
+      "icon": "b46a5.svg",
+      "rentable": true,
+      "status": "정상"
+    }
+  ],
+  "purposes": [
+    "인터뷰 촬영",
+    "발표 연습",
+    "팀 회의",
+    "과제 영상 촬영"
+  ]
+}

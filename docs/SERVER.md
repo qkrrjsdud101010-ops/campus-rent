@@ -1,0 +1,64 @@
+# CampusRent 서버 개발 안내
+
+2026-11-04 기준 Spring Boot·Thymeleaf 화면과 배정된 Oracle 11g XE 스키마를 연결했다. 실제 접속 주소·계정·비밀번호는 Git 제외 로컬 설정에서만 관리한다. 외부 배포와 학교 포털·하이클래스 SSO는 아직 구현하지 않았다.
+
+## 실행
+
+Windows PowerShell에서 저장소 루트를 기준으로 실행한다. 이미 이 PC에는 도구 준비가 끝나 있다.
+
+```powershell
+# 새 PC에서 한 번: 공식 배포 파일과 고정 체크섬을 검증해 .work/runtime에 준비
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\setup-server-runtime.ps1
+
+# 실제 설정은 예시를 복사해 로컬에서 작성한다. 기존 실제 파일을 덮어쓰지 않는다.
+# src/main/resources/application-local.properties.example → application-local.properties
+
+.\run-server.cmd
+```
+
+[개발 서버](http://127.0.0.1:8081)에 접속한다. `Ctrl+C`로 종료한다. 이미 서버가 실행 중이면 중복 실행하지 않는다. 다른 포트는 아래처럼 지정한다.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\server.ps1 -Task run -Port 8082
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\server.ps1 -Task test
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\server.ps1 -Task package
+```
+
+전용 Temurin JDK 21.0.13과 Maven 3.9.16을 사용하며 시스템 Java 8·전역 PATH는 변경하지 않는다. Spring Boot 4.1.2, JdbcTemplate, HikariCP, Spring Security를 사용한다. 서버 JDBC는 `ojdbc8:19.33.0.0`이며 해당 JDK·Oracle 11.2.0.2.0 조합으로 실제 API를 검증했다. Java 8용 단독 SQL 검사 도구의 `ojdbc6:11.2.0.4`와 구분한다. 이 확인이 모든 JDK·DB 조합의 공급사 인증을 의미하지는 않는다.
+
+서버는 `127.0.0.1`에만 바인딩한다. 로컬 설정은 저장소 루트의 상대 경로에서 읽으므로 루트에서 실행한다. 패키지에도 이 파일을 포함하지 않는다. 네트워크 접근이 가능한 수업 DB 환경이 필요하며, DB 장애 시 데모 데이터로 자동 전환하지 않는다. 원문 JDBC 오류·SQL·접속 설정은 응답에 노출하지 않는다.
+
+## 계정과 초기 데이터
+
+학생은 화면의 **회원가입**으로 생성한다. 비밀번호는 BCrypt로 해시하여 `APP_USER`에 저장하며 공개 회원가입의 역할은 항상 STUDENT다. 로그인은 HttpOnly·SameSite=Lax 세션 쿠키, 변경 요청은 CSRF 토큰을 사용한다. 브라우저 저장소에는 비밀번호나 인증 토큰을 기록하지 않는다.
+
+초기 관리자 로그인 정보는 이 PC의 Git 제외 `src/main/resources/application-local.properties` 안의 `campus.bootstrap.admin.email`과 `campus.bootstrap.admin.password`에서 확인한다. **DB 접속 계정과 별개인 애플리케이션 계정**이다. 공개 시연 계정은 실제 서버 로그인에 사용할 수 없다.
+
+새 스키마에서 관리자를 준비하려면 로컬의 두 관리자 값을 입력하고 `campus.bootstrap.enabled=true`로 한 번 실행한 뒤 false로 되돌린다. 기존 학생을 관리자로 승격하거나 기존 관리자 비밀번호를 덮어쓰지 않는다. `campus.seed-demo-catalog=true`는 가상 장비 7개·시설 5개와 관련 사양·구성품·운영 시간·대체 관계를 초기 입력한다. 이 PC의 배정 스키마에는 최초 준비를 완료했으며 두 플래그는 false다. 초기 데이터는 실물 재고·학교 운영 정책이 아니다. 앱 시작 시 DDL이나 설치 SQL을 실행하지 않으며, 기존 자원을 삭제하지 않는다.
+
+## 저장·처리 방식
+
+| 기능 | 서버 동작 |
+| --- | --- |
+| 자원·가능 시간 조회 | Oracle 자원·운영 시간·승인 기간·제한 조회, 공개 응답에 신청자 정보 제외 |
+| 선택 목록 | 탭의 sessionStorage에 임시 보관, 로그인만으로 제출하지 않음 |
+| 신청·내역 | 인증 학생의 신청 저장, 본인 신청만 조회·취소·반납 신청 |
+| 승인 | 자원 행 잠금 → 최신 중복 기간 검사 → 상태·처리 이력 원자 저장 |
+| 출고 | 승인 장비의 구성품 검수 및 불변 출고 기준 저장 |
+| 반납 | 회차별 이번 반환량 저장, 원래 출고 기준 대비 누적량·누락 계산 |
+| 점검 | 보류·손상 시 점검 유지, 반환 완료 후 별도 확인으로 정상 복구 |
+| 시설 이용 | 관리자가 실제 시작·종료 시각 저장, 조기 종료해도 원래 승인 기간 유지 |
+| 충돌 | 항목 버전·장비 버전과 역할·소유권 검사, 오래된 처리 거부 |
+
+승인 대기는 자원을 확보하지 않는다. 승인·출고·반납·점검·시설 이용 처리는 같은 서비스 트랜잭션으로 저장한다. `/api/admin/**`는 관리자만 호출할 수 있다. 주요 API는 `/api/auth/*`, `/api/catalog`, `/api/requests`, `/api/admin/requests/{number}/items/{id}/actions`다.
+
+`preview.cmd`의 8080 정적 화면은 기존 독립 시연으로 남아 있다. 서버 렌더링 시 `data-backend=server`가 적용되고 API 어댑터를 사용한다. 정적 시연과 실제 Oracle 개발 데이터를 혼용하지 않는다.
+
+## 확인 결과와 남은 범위
+
+- Maven 단위 테스트 7개·JAR 패키징 성공: 잘못된 조건·버전, 검수 누락, 초과 반환, 회차 누적, 손상·보류 정책.
+- 실제 Oracle HTTP 통합 검증 20개 통과: 인증·CSRF·소유권, 동시 승인 경쟁, 출고·보류·추가 반환·점검, 시설 처리, 공개 데이터 범위, 재로그인 후 영구 저장.
+- 임시 Chrome 프로필의 실제 서버 화면 검증 20개 통과: 주요 4개 화면·모바일 표시·이미지, 일정 적용·선택 유지, 로그인·새로고침·내역·로그아웃, 브라우저 인증 정보 미저장.
+- 기존 추천·가용성 데이터 검사 15개 통과. 실제 접속 설정은 Git·빌드 산출물에서 제외한다.
+
+이번 API 시험용 학생·신청·검수 행은 고유 식별자로 한정하여 정리했다. 초기 자원과 관리자 계정은 유지하며 사용한 시퀀스 번호는 되돌리지 않는다. 외부 배포·다중 서버·전체 브라우저 및 학교 실운영 시험은 수행하지 않았다. 장비 관리(F08), 대체 관계 편집(F17 관리 부분), 시설 운영 관리(F21), 10/28의 7개 UI 개선은 후속 작업이다.

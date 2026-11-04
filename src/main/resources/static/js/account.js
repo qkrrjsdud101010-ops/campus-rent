@@ -1,4 +1,4 @@
-import { resources } from './data.js';
+import { resources, serverMode } from './data.js';
 import { getState, login, signup, logout, processItem, refreshRecords } from './store.js';
 import { escapeHTML, formatDate, formatSchedule, openDialog, notify, navigate } from './ui.js';
 
@@ -44,7 +44,7 @@ export function openAuthDialog(reason = 'header') {
   let busy = false;
   const description = reason === 'request'
     ? '선택한 항목을 그대로 이어서 신청하세요.'
-    : reason === 'records' ? '로그인하고 내 시연 신청을 확인하세요.' : '로그인하고 CampusRent를 이용하세요.';
+    : reason === 'records' ? '로그인하고 내 신청을 확인하세요.' : '로그인하고 CampusRent를 이용하세요.';
   const dialog = openDialog('CampusRent에 로그인', '<div data-auth-content></div>', () => {});
   authDialog = dialog;
   dialog.classList.add('auth-dialog');
@@ -52,18 +52,18 @@ export function openAuthDialog(reason = 'header') {
   const host = dialog.querySelector('[data-auth-content]');
   const render = (message = '') => {
     host.innerHTML = `<p class="muted">${description}</p>
-      <p class="info-banner small">시연용 계정입니다. 실제 학교 계정으로 로그인할 수 없습니다. 새로고침하면 로그인과 새로 만든 시연 계정이 초기화됩니다.</p>
+      ${serverMode ? '<p class="info-banner small">CampusRent에 가입한 계정으로 로그인하세요.</p>' : '<p class="info-banner small">화면 시연 계정은 새로고침하면 초기화됩니다.</p>'}
       <form data-auth-form novalidate>
         ${registering ? `<label class="field" for="auth-name">이름<input class="input" id="auth-name" name="name" autocomplete="name" value="${e(authDraft.name)}" required><span class="form-error small" data-error="name"></span></label>` : ''}
         <label class="field" for="auth-email">이메일<input class="input" id="auth-email" name="email" type="email" inputmode="email" autocomplete="email" value="${e(authDraft.email)}" required><span class="form-error small" data-error="email"></span></label>
         <label class="field" for="auth-password">비밀번호<span class="password-wrap"><input class="input" id="auth-password" name="password" type="password" autocomplete="${registering ? 'new-password' : 'current-password'}" required><button class="btn btn-quiet password-toggle" type="button" aria-label="비밀번호 보기" data-password-toggle>보기</button></span>
           ${registering ? '<span class="small muted">8자 이상, 영문과 숫자를 포함해주세요.</span>' : ''}<span class="form-error small" data-error="password"></span></label>
         <p class="form-error small" role="alert" data-auth-error></p>
-        <button class="btn btn-primary btn-block" type="submit">${registering ? '시연 프로필 만들기' : '로그인'}</button>
+        <button class="btn btn-primary btn-block" type="submit">${registering ? (serverMode ? '회원가입' : '시연 프로필 만들기') : '로그인'}</button>
       </form>
       <button class="btn btn-quiet auth-switch" type="button" data-auth-switch>${registering ? '이미 계정이 있나요? 로그인' : '계정이 없나요? 회원가입'}</button>
       <p class="small muted" role="status">${e(message)}</p>
-      ${!registering ? `<details class="demo-accounts"><summary>시연 계정 안내</summary><p class="small muted">학생: demo@campusrent.example<br>다른 학생: other@campusrent.example<br>학생 비밀번호: Campus123!<br>관리자: admin@campusrent.example<br>관리자 비밀번호: CampusAdmin123!<br>관리자 역할은 준비된 가상 계정에만 부여됩니다.</p></details>` : ''}`;
+      ${!registering && !serverMode ? `<details class="demo-accounts"><summary>시연 계정 안내</summary><p class="small muted">학생: demo@campusrent.example<br>다른 학생: other@campusrent.example<br>학생 비밀번호: Campus123!<br>관리자: admin@campusrent.example<br>관리자 비밀번호: CampusAdmin123!<br>관리자 역할은 준비된 가상 계정에만 부여됩니다.</p></details>` : ''}`;
     const form = host.querySelector('form');
     form.querySelectorAll('input').forEach(input => input.addEventListener('input', () => {
       if (input.name !== 'password') authDraft[input.name] = input.value;
@@ -128,7 +128,7 @@ export function openAuthDialog(reason = 'header') {
           form.querySelector('[data-auth-error]').textContent = error.message || '인증을 완료하지 못했습니다. 다시 시도해주세요.';
           form.elements.password.value = '';
           host.querySelectorAll('input, button').forEach(input => { input.disabled = false; });
-          button.textContent = registering ? '시연 프로필 만들기' : '로그인';
+          button.textContent = registering ? (serverMode ? '회원가입' : '시연 프로필 만들기') : '로그인';
           form.elements.password.focus();
         }
       } finally {
@@ -170,7 +170,7 @@ export function renderAdminPage(container, params = new URLSearchParams()) {
   const { user } = getState();
   if (!user || user.role !== 'admin') {
     container.innerHTML = `<section class="page-shell"><section class="panel empty-state"><h1>${!user ? '관리자 로그인이 필요합니다.' : '접근할 수 없습니다.'}</h1>
-      <p class="muted">${!user ? '관리자 내용은 인증된 시연 관리자 계정에만 표시됩니다.' : '학생 계정에는 관리자 처리 권한이 없습니다.'}</p>
+      <p class="muted">${!user ? '관리자 내용은 인증된 관리자 계정에만 표시됩니다.' : '학생 계정에는 관리자 처리 권한이 없습니다.'}</p>
       <div class="admin-actions">${!user ? '<button type="button" class="btn btn-primary" data-admin-login>로그인</button>' : ''}<a class="btn btn-secondary" href="/" data-home>학생 홈으로 돌아가기</a></div></section></section>`;
     container.querySelector('[data-admin-login]')?.addEventListener('click', () => openAuthDialog());
     container.querySelector('[data-home]').addEventListener('click', event => { event.preventDefault(); navigate('/'); });
@@ -182,7 +182,7 @@ export function renderAdminPage(container, params = new URLSearchParams()) {
   container.innerHTML = `<section class="page-shell admin-page">
     <div class="admin-heading"><div class="page-heading"><p class="eyebrow">CampusRent · 관리자</p><h1>시설·장비 신청 관리</h1><p class="muted">개별 신청의 승인부터 실제 수령·반납 및 시설 이용 확인까지, 한 화면에서 처리하세요.</p></div>
       <button class="btn btn-secondary" type="button" data-admin-refresh>최신 내역 새로고침</button></div>
-    <p class="info-banner small">가상 시설·장비로 구성한 화면 시연입니다. 실제 학교의 신청·재고와 연결되지 않습니다. 학생 화면에서 접수한 항목의 처리 흐름을 확인할 수 있습니다.</p>
+    <p class="info-banner small">${serverMode ? '가상 시설·장비로 운영하는 개발 환경입니다. 학생의 신청과 관리자의 처리 결과는 서버에 저장됩니다. 실제 학교의 신청·재고와 연결되지 않습니다.' : '가상 시설·장비로 구성한 화면 시연입니다. 실제 학교의 신청·재고와 연결되지 않습니다. 학생 화면에서 접수한 항목의 처리 흐름을 확인할 수 있습니다.'}</p>
     <section class="admin-stats"><div class="panel stat-card"><p class="muted">처리할 승인 대기</p><strong>${pending}<span class="small muted"> 건</span></strong></div><div class="panel stat-card"><p class="muted">장비 반납 신청</p><strong>${returning}<span class="small muted"> 건</span></strong></div></section>
     <section class="panel admin-filter-panel"><div class="tabs" aria-label="자원 종류">${['전체', '장비', '시설'].map(kind => `<button type="button" class="chip ${adminFilters.kind === kind ? 'chip-active' : ''}" aria-pressed="${adminFilters.kind === kind}" data-admin-kind="${kind}">${kind}</button>`).join('')}</div>
       <div class="field-grid"><label class="field">신청 검색<input class="input" data-admin-search aria-label="관리자 신청 검색" placeholder="신청 번호, 자원명, 관리번호 또는 신청자 ID" value="${e(adminFilters.query)}"></label>

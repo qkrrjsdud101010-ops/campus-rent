@@ -34,4 +34,7 @@ window.addEventListener('popstate', () => render({moveFocus: true}));
 window.addEventListener('campus:auth', openAuthDialog);
 page.innerHTML = '<div class="page-shell empty-state" role="status">CampusRent 화면을 준비하고 있습니다…</div>';
 try { await ready; subscribe(() => render()); render(); }
-catch (error) { page.innerHTML = `<div class="page-shell empty-state"><h1>시연 저장소를 열지 못했습니다.</h1><p>${escapeHTML(error.message)}</p><p>브라우저의 사이트 저장 허용 여부를 확인한 후 새로고침해 주세요.</p></div>`; }
+catch (error) {
+  page.innerHTML = `<div class="page-shell empty-state"><h1>CampusRent에 연결하지 못했습니다.</h1><p>${escapeHTML(error.message)}</p><button class="btn btn-primary" id="reload-page">다시 연결</button></div>`;
+  document.getElementById('reload-page').addEventListener('click', () => location.reload());
+}
