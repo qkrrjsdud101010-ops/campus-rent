@@ -113,7 +113,18 @@ public class RentalService {
     @SuppressWarnings("unchecked") private List<Component> baseComponents(Map<String,Object> resource){return ((List<Map<String,Object>>)resource.get("components")).stream().map(c->new Component(str(c.get("componentId")),str(c.get("name")),Math.toIntExact(num(c.get("requiredQuantity"))),Math.toIntExact(num(c.get("requiredQuantity"))),Boolean.TRUE.equals(c.get("required")),Boolean.TRUE.equals(c.get("body")))).toList();}
     private List<Component> snapshotComponents(long checkoutId){return jdbc.queryForList("SELECT * FROM CHECKOUT_COMPONENT WHERE CHECKOUT_ID=? ORDER BY COMPONENT_SEQ",checkoutId).stream().map(c->new Component(str(c.get("COMPONENT_SEQ")),str(c.get("COMPONENT_NAME")),Math.toIntExact(num(c.get("REQUIRED_QTY"))),Math.toIntExact(num(c.get("DELIVERED_QTY"))),"Y".equals(c.get("REQUIRED_YN")),"Y".equals(c.get("BODY_YN")))).toList();}
     private boolean outstanding(long resourceId,long excluded){return jdbc.queryForObject("SELECT COUNT(*) FROM REQUEST_ITEM WHERE EQUIPMENT_ID=? AND REQUEST_ITEM_ID<>? AND STATUS_CODE IN ('CHECKED_OUT','RETURN_REQUESTED','RETURN_HELD')",Long.class,resourceId,excluded)>0;}
-    private void setEquipment(long resourceId,long itemId,CurrentUser actor,String status,String reason){String from=jdbc.queryForObject("SELECT OPERATING_STATUS FROM EQUIPMENT WHERE EQUIPMENT_ID=?",String.class,resourceId);jdbc.update("UPDATE EQUIPMENT SET OPERATING_STATUS=?,ROW_VERSION=ROW_VERSION+1 WHERE EQUIPMENT_ID=?",status,resourceId);jdbc.update("INSERT INTO EQUIPMENT_CHECK_LOG(CHECK_LOG_ID,EQUIPMENT_ID,RELATED_ITEM_ID,ACTION_CODE,FROM_STATUS,TO_STATUS,REASON_TEXT,CHECKED_BY) VALUES(?,?,?,?,?,?,?,?)",next("SQ_EQUIPMENT_CHECK_LOG"),resourceId,itemId,status.equals("NORMAL")?"CHECK_COMPLETED":"CHECK_REQUIRED",from,status,reason,Long.parseLong(actor.id()));}
+    private void setEquipment(long resourceId, long itemId, CurrentUser actor, String status, String reason) {
+        String from = jdbc.queryForObject("SELECT OPERATING_STATUS FROM EQUIPMENT WHERE EQUIPMENT_ID=?",
+                String.class, resourceId);
+        // Return inspection must preserve an administrator's explicit suspension.
+        String nextStatus = "DISABLED".equals(from) && "CHECKING".equals(status) ? "DISABLED" : status;
+        jdbc.update("UPDATE EQUIPMENT SET OPERATING_STATUS=?,ROW_VERSION=ROW_VERSION+1 WHERE EQUIPMENT_ID=?",
+                nextStatus, resourceId);
+        jdbc.update("INSERT INTO EQUIPMENT_CHECK_LOG(CHECK_LOG_ID,EQUIPMENT_ID,RELATED_ITEM_ID,ACTION_CODE,FROM_STATUS,TO_STATUS,REASON_TEXT,CHECKED_BY) VALUES(?,?,?,?,?,?,?,?)",
+                next("SQ_EQUIPMENT_CHECK_LOG"), resourceId, itemId,
+                "NORMAL".equals(status) ? "CHECK_COMPLETED" : "CHECK_REQUIRED",
+                from, nextStatus, reason, Long.parseLong(actor.id()));
+    }
     private void log(long item,String from,String to,CurrentUser user,String reason){jdbc.update("INSERT INTO REQUEST_STATUS_LOG(STATUS_LOG_ID,REQUEST_ITEM_ID,FROM_STATUS,TO_STATUS,CHANGED_BY,REASON_TEXT) VALUES(?,?,?,?,?,?)",next("SQ_REQUEST_STATUS_LOG"),item,from,to,Long.parseLong(user.id()),reason);}
     private long next(String sequence){return jdbc.queryForObject("SELECT "+sequence+".NEXTVAL FROM DUAL",Long.class);}
     private void requireState(String actual,String expected){if(!actual.equals(expected))throw conflict("현재 상태에서는 이 작업을 수행할 수 없습니다.");}

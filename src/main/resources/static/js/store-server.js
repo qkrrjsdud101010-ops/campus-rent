@@ -12,7 +12,7 @@ async function api(path,{method='GET',body}={}){
   if(method!=='GET'&&!csrf){const response=await fetch('/api/auth/csrf',{credentials:'same-origin',cache:'no-store'});if(!response.ok)throw new Error('보안 토큰을 준비하지 못했습니다.');csrf=await response.json();}
   const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',headers:{...(body!==undefined?{'Content-Type':'application/json'}:{}),...(method!=='GET'?{[csrf.headerName]:csrf.token}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
   const result=response.status===204?null:await response.json().catch(()=>null);
-  if(!response.ok){if(response.status===401){state.user=null;state.records=[];state.equipmentStates={};csrf=null;emit();}if(response.status===403)csrf=null;throw new Error(result?.message||'요청을 처리하지 못했습니다. 다시 확인해주세요.');}
+  if(!response.ok){if(response.status===401){state.user=null;state.records=[];state.equipmentStates={};csrf=null;emit();}if(response.status===403)csrf=null;const error = new Error(result?.message||'요청을 처리하지 못했습니다. 다시 확인해주세요.'); error.status = response.status; throw error;}
   return result;
 }
 async function catalog(){try{replaceCatalog(await api('/api/catalog'));state.storageError='';}catch(error){markCatalogUnavailable(error.message);state.storageError=error.message;throw error;}}
@@ -31,6 +31,11 @@ export function removeSelection(id){state.selection=state.selection.filter(item=
 export function clearSelection(){state.selection=[];save();}
 const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('campusrent.server.changed.v1'):null;
 channel?.addEventListener('message',()=>refreshRecords().catch(()=>{}));
+export async function requestApi(path, options = {}) {
+  const result = await api(path, options);
+  if (options.method && options.method.toUpperCase() !== 'GET') channel?.postMessage({changed: true});
+  return result;
+}
 async function changed(){await refreshRecords();channel?.postMessage({changed:true});}
 export async function submitSelection(){if(submitting)throw new Error('신청을 저장하고 있습니다.');if(state.user?.role!=='student')throw new Error('학생 계정으로 로그인해주세요.');if(!state.selection.length)throw new Error('신청할 자원을 선택해주세요.');submitting=true;const selected=clone(state.selection);try{const result=await api('/api/requests',{method:'POST',body:{items:selected.map(({resourceId,condition})=>({resourceId,condition}))}});const submitted=new Set(selected.map(item=>item.id));state.selection=state.selection.filter(item=>!submitted.has(item.id));save();await changed();return result.record;}finally{submitting=false;}}
 export async function cancelItem(number,id,expectedVersion){const result=await api(`/api/requests/${encodeURIComponent(number)}/items/${encodeURIComponent(id)}/cancel`,{method:'POST',body:{expectedVersion}});await changed();return result.item;}

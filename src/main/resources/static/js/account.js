@@ -20,6 +20,7 @@ export function renderAccountMenu(container) {
     <a class="btn btn-secondary" href="${admin ? '/admin' : '/records'}" data-account-route>${admin ? '신청 관리' : '내 신청'}</a>
     <details class="account-dropdown"><summary class="btn btn-secondary profile-summary">${e(user.name)} · ${admin ? '관리자' : '학생'} <span aria-hidden="true">⌄</span></summary>
       <div class="account-dropdown-content panel"><p class="small muted">${e(user.email)}</p>
+        ${admin ? '<a href="/admin/equipment" class="btn btn-quiet" data-account-route>장비 관리</a>' : ''}
         ${!admin ? '<a href="/history" class="btn btn-quiet" data-account-route>과거 신청 내역</a>' : ''}
         <button type="button" class="btn btn-quiet" data-logout>로그아웃</button>
       </div>
@@ -182,6 +183,7 @@ export function renderAdminPage(container, params = new URLSearchParams()) {
   container.innerHTML = `<section class="page-shell admin-page">
     <div class="admin-heading"><div class="page-heading"><p class="eyebrow">CampusRent · 관리자</p><h1>시설·장비 신청 관리</h1><p class="muted">개별 신청의 승인부터 실제 수령·반납 및 시설 이용 확인까지, 한 화면에서 처리하세요.</p></div>
       <button class="btn btn-secondary" type="button" data-admin-refresh>최신 내역 새로고침</button></div>
+    <nav class="tabs" aria-label="관리자 메뉴"><a class="btn btn-primary" href="/admin" data-link aria-current="page">신청 관리</a><a class="btn btn-secondary" href="/admin/equipment" data-link>장비 관리</a></nav>
     <p class="info-banner small">${serverMode ? '가상 시설·장비로 운영하는 개발 환경입니다. 학생의 신청과 관리자의 처리 결과는 서버에 저장됩니다. 실제 학교의 신청·재고와 연결되지 않습니다.' : '가상 시설·장비로 구성한 화면 시연입니다. 실제 학교의 신청·재고와 연결되지 않습니다. 학생 화면에서 접수한 항목의 처리 흐름을 확인할 수 있습니다.'}</p>
     <section class="admin-stats"><div class="panel stat-card"><p class="muted">처리할 승인 대기</p><strong>${pending}<span class="small muted"> 건</span></strong></div><div class="panel stat-card"><p class="muted">장비 반납 신청</p><strong>${returning}<span class="small muted"> 건</span></strong></div></section>
     <section class="panel admin-filter-panel"><div class="tabs" aria-label="자원 종류">${['전체', '장비', '시설'].map(kind => `<button type="button" class="chip ${adminFilters.kind === kind ? 'chip-active' : ''}" aria-pressed="${adminFilters.kind === kind}" data-admin-kind="${kind}">${kind}</button>`).join('')}</div>

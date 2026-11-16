@@ -270,7 +270,9 @@ function bindSelection(scope) {
 
 function filterForm(path, value) {
   const facility = path === '/facilities';
-  const categories = facility ? ['전체', '스터디룸', '회의실', '촬영실'] : ['전체', '카메라', '프로젝터', '마이크'];
+  const defaultCategories = facility ? ['스터디룸', '회의실', '촬영실'] : ['카메라', '프로젝터', '마이크'];
+  const registeredCategories = resources.filter(resource => resource.kind === (facility ? '시설' : '장비')).map(resource => resource.category);
+  const categories = ['전체', ...new Set([...defaultCategories, ...registeredCategories])];
   return `<form class="panel rental-search" data-search-form novalidate><div class="${facility ? 'field-grid' : ''}"><label class="field">${facility ? '시설명 검색' : '장비명·품목·모델 검색'}<input class="input" name="query" aria-label="${facility ? '시설' : '장비'} 검색" placeholder="${facility ? '회의실, 스터디룸, 촬영실' : '카메라, 프로젝터, 마이크 또는 모델명'}" value="${e(value.query)}"></label>${facility ? `<label class="field">시설 유형<select class="input" name="category">${categories.map(category => `<option ${category === value.category ? 'selected' : ''}>${e(category)}</option>`).join('')}</select></label>` : ''}</div><div class="button-row">${button(facility ? '시설명·유형 검색' : '장비 검색', 'data-search')}</div>${!facility ? `<div class="filters" role="group" aria-label="장비 분류">${categories.map(category => `<button type="button" class="chip ${value.category === category ? 'chip-active' : ''}" aria-pressed="${value.category === category}" data-category="${e(category)}">${e(category)}</button>`).join('')}</div>` : '<hr>'}${fieldHtml(value.condition, facility ? '시설' : '장비', 'search-condition')}<div class="button-row"><button class="btn btn-primary" type="submit">${facility ? '예약 가능한 시설 조회' : '대여 가능 장비 조회'}</button>${!facility ? button('대여·수령 안내', 'data-guide') : ''}</div><p class="error-text" role="alert" data-error ${value.error ? '' : 'hidden'}>${e(value.error)}</p></form>`;
 }
 

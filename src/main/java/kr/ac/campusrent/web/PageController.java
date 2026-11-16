@@ -5,6 +5,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class PageController {
-    @GetMapping({"/", "/equipment", "/facilities", "/purpose", "/records", "/requests", "/history", "/admin"})
+    @GetMapping({"/", "/equipment", "/facilities", "/purpose", "/records", "/requests", "/history", "/admin", "/admin/equipment"})
     public String index() { return "index"; }
 }

@@ -16,6 +16,8 @@
 *.nar
 *.ear
 *.zip
+# Curated CampusRent poster assets shared with the team
+!/output/CampusRent_포스터_화면이미지.zip
 *.tar.gz
 *.rar
 

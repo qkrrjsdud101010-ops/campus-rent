@@ -7,7 +7,7 @@
 | 항목 | 현재 확인 |
 | --- | --- |
 | 단독 검사 Java / javac | 시스템 Java 1.8.0_503 / JDK 1.8.0_151 유지 |
-| Spring Boot 서버 | 전용 Java 21.0.13·Spring Boot 4.1.2·JdbcTemplate, 로컬 실행 검증 |
+| Spring Boot 서버 | 전용 Java 25 LTS·Spring Boot 4.1.2·JdbcTemplate, F08 Oracle API·화면·단위 테스트 검증 |
 | 빌드·SQL 도구 | Maven 3.9.16을 .work/runtime에 준비, 단독 SQL 도구는 시스템 Java 8 사용 |
 | 화면 | HTML·CSS·JavaScript 및 JDK 기반 로컬 미리보기 |
 | DB | Oracle Database 11g XE 11.2.0.2.0 접속 확인, SID 방식 |
@@ -15,7 +15,7 @@
 
 Oracle [공식 JDBC FAQ](https://www.oracle.com/database/technologies/faq-jdbc.html)는 11g ojdbc6의 JDK 8 지원을 11.2.0.3/11.2.0.4 드라이버에서 안내한다. 선택한 라이브러리는 [Oracle의 Maven Central 배포](https://blogs.oracle.com/developers/oracle-database-client-libraries-for-java-now-on-maven-central) 버전이다. 이번 읽기 전용 검사에서 DB 11.2.0.2.0·JDBC 11.2.0.4.0의 실제 연결을 확인했다. 이 동작 확인을 모든 XE 패치의 공식 인증으로 일반화하지 않는다.
 
-이 문서의 단독 접속·SQL 검사는 기존 Java 8 환경에서 실행한다. 이어서 구성한 Spring Boot 서버는 전용 Java 21과 ojdbc8 19.33.0.0으로 Oracle 업무 API를 검증했다. 서버 실행은 [개발 안내](../../docs/SERVER.md)를 따른다.
+이 문서의 단독 접속·SQL 검사는 기존 Java 8 환경에서 실행한다. Spring Boot 서버의 현재 런타임은 전용 Java 25이며, 이전 Oracle 업무 API 검증은 Java 21과 ojdbc8 19.33.0.0으로 수행했다. F08은 Java 25.0.4.1·동일 서버 JDBC·Oracle 11.2.0.2.0 조합으로 실제 API 11개·Chrome 화면 13개·단위 테스트 18개를 검증했다. 서버 실행은 [개발 안내](../../docs/SERVER.md)를 따른다.
 
 ## 로컬 설정
 
@@ -104,4 +104,4 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\run-oracle-schem
 - 설치 전 본인 객체 0개·필수 생성 권한·할당량을 확인하고, 사용자가 선택한 기존 ERD·SQL 이름으로 테이블 26개·컬럼 185개·시퀀스 17개·트리거 17개를 생성했다.
 - PK 26개·UQ 13개·FK 44개·CHECK 72개·명시 인덱스 35개와 트리거 컴파일을 확인했다. 유효하지 않은 CampusRent 객체는 0개다.
 - 실제 무결성 검사 29개와 생성·조회·수정·삭제 4개를 통과했다. 테스트 데이터는 롤백했고 시퀀스 번호만 일부 소모됐다.
-- 이어서 Java 21·Spring Boot 4.1.2·JdbcTemplate·서버 JDBC ojdbc8 19.33.0.0을 연결하고 실제 API 20개·Chrome 화면 20개·단위 테스트 7개를 검증했다. 실행 방법은 [서버 안내](../../docs/SERVER.md)를 참조한다. Java 8 단독 도구의 ojdbc6와 구분하며 설치 SQL은 재실행하지 않았다. Git Commit·Push는 진행하지 않았다.
+- 이어서 Java 21·Spring Boot 4.1.2·JdbcTemplate·서버 JDBC ojdbc8 19.33.0.0을 연결하고 실제 API 20개·Chrome 화면 20개·단위 테스트 7개를 검증했다. 실행 방법은 [서버 안내](../../docs/SERVER.md)를 참조한다. Java 8 단독 도구의 ojdbc6와 구분하며 설치 SQL은 재실행하지 않았다. 이후 F08은 Java 25.0.4.1에서 API 11개·화면 13개·전체 단위 테스트 18개를 검증했다. 사용자 승인에 따라 이번 변경을 로컬 Git으로 공유한다.

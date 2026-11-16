@@ -55,7 +55,7 @@ public class CatalogService {
         item.put("kind",kind.equals("E")?"장비":"시설"); item.put("name",name); item.put("category",category); item.put("isDemo",yes(row.get("IS_DEMO_YN")));
         String state=str(row.get("OPERATING_STATUS")); item.put("status",state.equals("NORMAL")?"정상":state.equals("CHECKING")?"점검":"중지"); item.put("version",num(row.get("ROW_VERSION"))); return item;
     }
-    private String publicId(String kind,long id,String code) {
+    public static String publicId(String kind,long id,String code) {
         if(kind.equals("E")&&code.matches("DEMO-(CAM|PROJ|MIC)\\d+")) return code.substring(5).toLowerCase(Locale.ROOT);
         if(kind.equals("F")&&code.matches("DEMO-(ROOM|STUDY|STUDIO)\\d+")) return code.substring(5).toLowerCase(Locale.ROOT);
         return (kind.equals("E")?"equipment:":"facility:")+id;

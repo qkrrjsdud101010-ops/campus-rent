@@ -94,10 +94,10 @@ try {
     New-Item -ItemType Directory -Path $runtimeRoot -Force | Out-Null
     $javaHome = $null
     if (-not [string]::IsNullOrWhiteSpace($env:CAMPUS_JAVA_HOME)) {
-        if ((Get-JavaMajor $env:CAMPUS_JAVA_HOME) -lt 21) { throw 'CAMPUS_JAVA_HOME must point to a JDK 21 or later.' }
+        if ((Get-JavaMajor $env:CAMPUS_JAVA_HOME) -ne 25) { throw 'CAMPUS_JAVA_HOME must point to a JDK 25 installation.' }
         $javaHome = [IO.Path]::GetFullPath($env:CAMPUS_JAVA_HOME)
     }
-    $jdkInstall = Join-Path $runtimeRoot 'temurin-21.0.13-9'
+    $jdkInstall = Join-Path $runtimeRoot 'temurin-25.0.5-8'
     $candidates = New-Object 'System.Collections.Generic.List[string]'
     if (Test-Path -LiteralPath $jdkInstall -PathType Container) { $candidates.Add($jdkInstall) }
     if (-not [string]::IsNullOrWhiteSpace($env:JAVA_HOME)) { $candidates.Add($env:JAVA_HOME) }
@@ -117,16 +117,16 @@ try {
         }
     }
     if ($null -eq $javaHome) {
-        foreach ($candidate in $candidates) { if ((Get-JavaMajor $candidate) -eq 21) { $javaHome = $candidate; break } }
+        foreach ($candidate in $candidates) { if ((Get-JavaMajor $candidate) -eq 25) { $javaHome = $candidate; break } }
     }
     if ($null -eq $javaHome) {
         # Exact Eclipse Temurin release published by the official Adoptium API.
-        $jdkBase = 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/'
-        $jdkName = 'OpenJDK21U-jdk_x64_windows_hotspot_21.0.13_9.zip'
-        $jdkArchive = Get-VerifiedArchive $jdkName ($jdkBase + $jdkName) ($jdkBase + $jdkName + '.sha256.txt') 'SHA256' 'a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9'
-        $javaHome = Expand-VerifiedRuntime $jdkArchive 'temurin-21.0.13-9'
+        $jdkBase = 'https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/'
+        $jdkName = 'OpenJDK25U-jdk_x64_windows_hotspot_25.0.5_8.zip'
+        $jdkArchive = Get-VerifiedArchive $jdkName ($jdkBase + $jdkName) ($jdkBase + $jdkName + '.sha256.txt') 'SHA256' '636bdc13dc649ddc7d5921c5c7d23cca6e44fd19d662b45cc9c02135a6c96c42'
+        $javaHome = Expand-VerifiedRuntime $jdkArchive 'temurin-25.0.5-8'
     }
-    if ((Get-JavaMajor $javaHome) -lt 21) { throw 'The prepared JDK is not compatible with Java 21.' }
+    if ((Get-JavaMajor $javaHome) -ne 25) { throw 'The prepared JDK is not compatible with Java 25.' }
 
     $mavenHome = $null
     $mavenCandidates = @($env:CAMPUS_MAVEN_HOME, $env:MAVEN_HOME, (Join-Path $runtimeRoot 'apache-maven-3.9.16'))

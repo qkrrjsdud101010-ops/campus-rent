@@ -43,7 +43,7 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 | --- | --- |
 | 최종 Frontend | HTML·CSS·JavaScript·Thymeleaf, 실제 서버 화면 연동 |
 | 화면 시연 | Figma Make, React, TypeScript, Tailwind CSS, Vite |
-| Backend | Java 21·Spring Boot 4.1.2·Spring Security (전용 런타임, 시스템 Java 8 유지) |
+| Backend | Java 25 LTS·Spring Boot 4.1.2·Spring Security (전용 런타임, 시스템 Java 8 유지) |
 | Database | Oracle 11g XE 테이블 26개·시퀀스 17개, 실제 인증·신청·검수 API 연동 |
 | 데이터 접근 | Spring JDBC JdbcTemplate·HikariCP·서비스 트랜잭션 |
 | 목적별 추천 | 등록된 키워드·용도·인원 조건에 따른 규칙 기반 |
@@ -76,6 +76,8 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 | 대화·작업 기록 | Figma 연결·화면 우선 개발 결정·구현·검증 요약 | [`2026-10-27-session.md`](docs/worklogs/2026-10-27-session.md) |
 | 대화·작업 기록(10/28) | Oracle SQL·화면 개선 설계·학교 간편로그인 가능성 검토 | [`2026-10-28-session.md`](docs/worklogs/2026-10-28-session.md) |
 | 대화·작업 기록(11/04) | 수업 Oracle 접속 준비·로컬 비밀 설정·실제 검사 결과 | [`2026-11-04-session.md`](docs/worklogs/2026-11-04-session.md) |
+| 최근 대화·작업 기록(11/16) | F08·Java 25 검증·공모전 일정·포스터 화면 이미지 추출·Git 공유 | [`2026-11-16-session.md`](docs/worklogs/2026-11-16-session.md) |
+| 포스터용 화면 이미지 | 핵심 12개·보조 25개·배치 조합·미리보기·전달 ZIP | [`추출 안내`](output/poster-screenshots/README.md) · [`이미지 ZIP`](output/CampusRent_포스터_화면이미지.zip) |
 | Figma Make | 화면 프로토타입 | https://www.figma.com/make/nbkwN4laz5mMem3FhP5xxj/Implement-CampusRent-Home-Screen--%EB%B3%B5%EC%82%AC-?t=I3fMwnQrBf6387yP-1 |
 
 ## 7. 프로젝트 폴더 구조
@@ -116,7 +118,8 @@ campus-rent/
 - [ ] 개발·바이브 코딩 도구 및 협업 방식 확정
 - [ ] GitHub 문서 구조화 및 팀원별 Clone 확인
 - [x] Spring Boot·Thymeleaf·Oracle 핵심 업무 연동, API 20개·서버 화면 20개·단위 테스트 7개 검증
-- [ ] 남은 필수 관리 화면·UI 개선·외부 배포 구현
+- [x] F08 장비 관리 1차 구현·실제 Oracle API 11개·브라우저 13개 검증
+- [ ] 공유 분류·모델 정의 편집, 시설·대체 관계 관리·UI 개선·외부 배포 구현
 - [ ] 통합 테스트, 배포 및 검증
 
 ## 9. 개발 준비 및 협업
@@ -141,6 +144,8 @@ campus-rent/
 
 학생은 화면에서 회원가입합니다. 관리자 로그인 정보는 Git 제외 `src/main/resources/application-local.properties`의 `campus.bootstrap.admin.email`·`campus.bootstrap.admin.password`에서 확인합니다. DB 로그인과 별개이며 공개 시연 계정은 서버에 적용되지 않습니다. 자세한 준비·테스트·패키징과 범위는 [서버 개발 안내](docs/SERVER.md)를 참조하세요.
 
+관리자 로그인 후 **신청 관리 → 장비 관리** 또는 `/admin/equipment`에서 분류·모델·사양 등록, 장비 등록·수정, 구성품 편집, 대여 허용·사용 중지를 처리할 수 있습니다. 공유 모델 정의는 새 모델 등록 후 해당 장비에 선택하는 방식입니다.
+
 ## 11. 독립 화면 미리보기 실행
 
 JDK 8 이상(`java`, `javac`가 PATH에 등록된 환경)에서 저장소 루트의 터미널로 실행합니다. npm 패키지나 Oracle 설치는 필요하지 않습니다.
@@ -149,9 +154,9 @@ JDK 8 이상(`java`, `javac`가 PATH에 등록된 환경)에서 저장소 루트
 .\preview.cmd
 ```
 
-브라우저에서 [http://127.0.0.1:8080](http://127.0.0.1:8080)을 엽니다. 종료는 실행한 터미널에서 `Ctrl+C`입니다. 이 명령은 화면 확인용 Java 서버를 실행합니다. 최종 Spring Boot 서버는 아직 구성하지 않았습니다.
+브라우저에서 [http://127.0.0.1:8080](http://127.0.0.1:8080)을 엽니다. 종료는 실행한 터미널에서 `Ctrl+C`입니다. 실제 Oracle에 연결하는 Spring Boot 개발 서버는 위 10절의 `run-server.cmd`로 실행합니다.
 
-홈, 장비·시설 대여, 목적별 추천, 선택 목록·최종 신청, 학생 신청 현황·과거 내역, 로그인·학생 회원가입, 관리자 승인·검수·시설 이용 처리를 시연할 수 있습니다. 가상 신청은 해당 브라우저의 IndexedDB에 저장합니다. 로그인·시연 회원가입 계정은 새로고침 시 초기화되며, 실제 계정 인증·서버 권한 검사·Oracle 저장은 후속 연동 대상입니다.
+8080 독립 시연에서는 홈, 장비·시설 대여, 목적별 추천, 선택 목록·최종 신청, 학생 신청 현황·과거 내역, 로그인·학생 회원가입, 관리자 승인·검수·시설 이용 처리를 확인할 수 있습니다. 가상 신청은 해당 브라우저의 IndexedDB에 저장하고 로그인·시연 회원가입 계정은 새로고침 시 초기화됩니다. 실제 계정 인증·서버 권한 검사·Oracle 저장은 8081 개발 서버에서 사용합니다.
 
 | 구분 | 시연 이메일 | 시연 비밀번호 |
 | --- | --- | --- |
