@@ -1,0 +1,2 @@
+# Preserve generated poster PDFs without text conversion or line-ending changes.
+/output/pdf/*.pdf binary

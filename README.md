@@ -76,9 +76,14 @@ CampusRent는 학생이 필요한 교내 시설·장비를 **직접 검색**하�
 | 대화·작업 기록 | Figma 연결·화면 우선 개발 결정·구현·검증 요약 | [`2026-10-27-session.md`](docs/worklogs/2026-10-27-session.md) |
 | 대화·작업 기록(10/28) | Oracle SQL·화면 개선 설계·학교 간편로그인 가능성 검토 | [`2026-10-28-session.md`](docs/worklogs/2026-10-28-session.md) |
 | 대화·작업 기록(11/04) | 수업 Oracle 접속 준비·로컬 비밀 설정·실제 검사 결과 | [`2026-11-04-session.md`](docs/worklogs/2026-11-04-session.md) |
-| 최근 대화·작업 기록(11/16) | F08·Java 25 검증·공모전 일정·포스터 화면 이미지 추출·Git 공유 | [`2026-11-16-session.md`](docs/worklogs/2026-11-16-session.md) |
+| 대화·작업 기록(11/16) | F08·Java 25 검증·공모전 일정·포스터 화면 이미지 추출·Git 공유 | [`2026-11-16-session.md`](docs/worklogs/2026-11-16-session.md) |
+| 최근 대화·작업 기록(11/17) | 포스터 제작·다른 팀 참고 검토·교수님 및 팀원 피드백·하단 간결화 | [`2026-11-17-session.md`](docs/worklogs/2026-11-17-session.md) |
 | 포스터용 화면 이미지 | 핵심 12개·보조 25개·배치 조합·미리보기·전달 ZIP | [`추출 안내`](output/poster-screenshots/README.md) · [`이미지 ZIP`](output/CampusRent_포스터_화면이미지.zip) |
+| 포스터 최신 피드백 반영본 | 60 × 85cm, 개발 배경과 화면 연결·색 대비·하단 간결화 | [`PDF`](output/pdf/CampusRent_포스터_피드백반영.pdf) · [`SVG`](output/poster-draft/CampusRent_포스터_피드백반영.svg) · [`PNG`](output/poster-draft/CampusRent_포스터_피드백반영.png) |
+| 포스터 이전 초안 | 요약 ERD·시스템 구성·검증 결과를 포함한 이전 검토안 | [`PDF`](output/pdf/CampusRent_포스터_초안.pdf) · [`SVG`](output/poster-draft/CampusRent_포스터_초안.svg) · [`PNG`](output/poster-draft/CampusRent_포스터_초안.png) |
 | Figma Make | 화면 프로토타입 | https://www.figma.com/make/nbkwN4laz5mMem3FhP5xxj/Implement-CampusRent-Home-Screen--%EB%B3%B5%EC%82%AC-?t=I3fMwnQrBf6387yP-1 |
+
+포스터의 PDF는 인쇄·제출용, SVG는 텍스트·도형 편집용, PNG는 미리보기용이다. 최신 반영본의 추천 화면은 2026-11-16 실제 개발 서버의 가상 자원 캡처이며, 대체 자원·일정 변경·신청 현황·반납 검수는 10월 화면설계서의 시연 이미지다. 화면 출처와 11월 12일 검증 결과의 범위를 포스터와 작업 기록에 표시했다. SVG의 한글 글꼴은 맑은 고딕 또는 Noto Sans KR을 사용한다.
 
 ## 7. 프로젝트 폴더 구조
 
