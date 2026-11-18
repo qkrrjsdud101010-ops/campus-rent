@@ -1,10 +1,14 @@
 # CampusRent 서버 개발 안내
 
-선택형 문장 분석 API와 확인 화면을 추가했다. `GET /api/recommendations/analysis-capabilities`, `POST /api/recommendations/analyze`는 비로그인 탐색을 지원하되 POST의 CSRF 검사는 유지한다. 사용자 선택에 따라 기본 제공자는 OpenAI GPT다. 키 등록 후 8081 서버를 재시작했으며 기능 조회는 `available=true`다. 실제 외부 분석 1회는 OpenAI HTTP 429로 `rules / rate-limited`에 대체되어 GPT 성공 응답은 아직 미검증이다. 429의 잔액·사용량·속도 제한 원인은 계정에서 확인해야 한다. 이전 Java 97개·JAR 패키징 통과 기록과 실제 외부 호출 결과는 [문장 분석 안내](SENTENCE_ANALYSIS.md)에서 구분한다.
+선택형 문장 분석 API와 확인 화면을 추가했다. `GET /api/recommendations/analysis-capabilities`, `POST /api/recommendations/analyze`는 비로그인 탐색을 지원하되 POST의 CSRF 검사는 유지한다. 기본 제공자는 OpenAI GPT다. 키 등록·크레딧 충전 후 8081에서 지정 문장의 실제 외부 호출 1회가 HTTP 200/source=ai로 성공했다(약 2.734초). 활동 면접 연습·인원 4명·영상 필요를 반환했으며 공간 제안은 false였다. 포스터용 실제 화면에서는 사용자가 공간 조건을 유지하고 확인 적용 후 시설 정보·카메라 후보를 조회하는 흐름도 관찰했다. 한 문장과 해당 화면의 확인 범위이며 전반적인 분석 품질이나 학교 실운영 검증을 뜻하지 않는다. 앞선 429, Java 97개·JAR 패키징 기록과 최신 결과는 [문장 분석 안내](SENTENCE_ANALYSIS.md)에서 구분한다.
 
 2026-11-04 Spring Boot·Thymeleaf 화면과 배정된 Oracle 11g XE 스키마를 연결했고, 2026-11-18 신청 상세·시설 운영 관리·대체 장비 관계·개인 홈·모바일 선택 목록을 보강했다. Java 단위 테스트 73개와 실제 Oracle API 42개를 통과했다. 이번 실제 브라우저 검증은 자동화 연결 오류로 수행하지 못했다. 실제 접속 주소·계정·비밀번호는 Git 제외 로컬 설정에서만 관리한다. 외부 배포와 학교 포털·하이클래스 SSO는 아직 구현하지 않았다.
 
+**최신 배포 방향: Vercel 예정.** 위 내용은 기존 로컬 구현 기록이다. 화면만 배포할지 Spring Boot까지 포함할지, 실행/컨테이너·계정 지원, 원격 Oracle·GPT 접근, 공개 URL과 실제 배포 완료 여부는 확인하지 않았다. 저장소에서는 Dockerfile·Vercel 설정·배포 workflow를 찾지 못했다. 로컬 비밀 파일은 JAR에 포함되지 않으므로 배포 서버에 별도 비밀 설정과 애플리케이션 설정 연결이 필요하다. 이번에는 배포·설정 파일·기술 스택을 변경하지 않는다. [최신 결정과 배포 후 확인 목록](PROJECT_DECISIONS.md#5-배포-환경--vercel-예정)을 따른다.
+
 ## 실행
+
+아래 첫 문단은 같은 날 **키 입력 전의 이전 단계** 기록이다. 키·크레딧 준비 후 실제 성공 및 화면 확인은 문서 상단과 문장 분석 안내의 최신 기록을 따른다.
 
 2026-11-18 재점검에서는 `run-server.cmd`로 **8081** 실제 개발 서버를 실행하고 서버 모드 HTML·Oracle 카탈로그·분석 API를 확인했다. 로컬 분석은 활성화했지만 OpenAI 키가 없어 기능 조회는 `provider=openai, available=false`, 지정 문장 POST는 `source=rules, reason=unconfigured`였다. 외부 OpenAI 호출은 수행되지 않았다. Java 97개와 JS 28개 검사를 재실행해 통과했다. 기존 JAR·Git의 비밀 설정 제외도 재확인했다. 이번 코드 변경·새 JAR 빌드는 없으며 앞선 패키징 기록과 구분한다. 브라우저는 8081 페이지 준비 상태까지만 확인했고 최소화된 창의 자동 제어 복구 실패로 확인 적용·추천 화면은 미검증이다. 키 입력 후 실제 호출과 화면 검증이 남아 있다. 자세한 상태는 [문장 분석 안내](SENTENCE_ANALYSIS.md#2026-11-18-8081-개발-서버-재점검)에 기록한다.
 

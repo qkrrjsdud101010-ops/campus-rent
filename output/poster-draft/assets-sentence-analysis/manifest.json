@@ -1,0 +1,106 @@
+{
+  "poster_date": "2026-11-18",
+  "external_call": {
+    "date": "2026-11-18",
+    "model": "gpt-5.4-mini",
+    "http_status": 200,
+    "source": "ai",
+    "elapsed_seconds": 2.734,
+    "input": "4명이 면접 연습을 하고 녹화하려고 해요",
+    "analysis": {
+      "activity": "면접 연습",
+      "people": 4,
+      "peopleStatus": "explicit",
+      "needs": {
+        "space": false,
+        "video": true,
+        "audio": false,
+        "presentation": false
+      },
+      "needsClarification": false
+    },
+    "evidence": "Actual CSRF-protected 8081 endpoint call; sanitized result inspected from .work/openai-credit-check-result.json. No credential, cookie, or auth header is copied here."
+  },
+  "unit_tests": {
+    "date": "2026-11-18",
+    "tests": 97,
+    "failures": 0,
+    "errors": 0
+  },
+  "current_screens": {
+    "source": "http://127.0.0.1:8081/purpose",
+    "date": "2026-11-18",
+    "capture": "Native Chrome DevTools Capture full size screenshot via computer-use; real running Spring Boot/Oracle development application.",
+    "resources": "Virtual development resources; no school inventory claim.",
+    "analysis": {
+      "raw_local": ".work/poster-draft/analysis-review-full.png",
+      "raw_size": [
+        1444,
+        3391
+      ],
+      "crops": {
+        "analysis-input.png": [
+          71,
+          450,
+          987,
+          530
+        ],
+        "analysis-review.png": [
+          92,
+          753,
+          966,
+          1657
+        ],
+        "analysis-overview.png": [
+          92,
+          753,
+          966,
+          1357
+        ],
+        "analysis-confirm.png": [
+          92,
+          1537,
+          966,
+          1657
+        ]
+      },
+      "state": "AI result before user confirmation. Four people, video required, space not required. Original input and per-field apply checkboxes are visible.",
+      "poster_excerpt": "Separate, visibly spaced crops: input line; activity/people and space/video proposals; confirmation buttons. Audio/presentation rows remain in the full analysis-review asset but are omitted from the poster to enlarge the key controls."
+    },
+    "recommendation": {
+      "raw_local": ".work/poster-draft/recommendation-full.png",
+      "raw_size": [
+        1444,
+        5390
+      ],
+      "crops": {
+        "recommended-facility.png": [
+          40,
+          2370,
+          520,
+          2525
+        ],
+        "recommended-equipment.png": [
+          40,
+          4480,
+          520,
+          4635
+        ]
+      },
+      "state": "After capturing analysis, user confirmation selected the proposed activity and deselected applying the space=false proposal, preserving space=true. Four people, space+video retained. Actual facility purpose remained unselected, so facility cards are information candidates, not bookable approvals. Selection count zero; no request submitted."
+    },
+    "edits": "Only rectangular crops and aspect-preserving placement. No screenshot text, values or UI elements were fabricated or repainted. Personal account header, browser chrome and settings are excluded from the used crops."
+  },
+  "reused_screens": {
+    "date": "2026-10",
+    "source": "New-Era screen specification 2026-10-26 PPTX / 2026-10-27 PDF, previously extracted in output/poster-screenshots.",
+    "files": {
+      "alternative-tabs.png": "p20 U-007 alternative facility/time area 1, existing top crop",
+      "period-change.png": "p22 C-005 period change confirmation, existing top crop",
+      "alternative-facility.png": "p20 U-007 alternative facility/time area 2",
+      "request-status.png": "08 U-008 request status; demonstration pending item",
+      "return-inspection.png": "11 A-007 component inspection; checkout baseline, cumulative return and missing quantity"
+    },
+    "scope": "Historical design-specification demonstration images. Not relabeled as current GPT execution or current live Oracle records."
+  }
+}
