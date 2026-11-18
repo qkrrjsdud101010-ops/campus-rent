@@ -1,0 +1,30 @@
+.mobile-selection-bar{display:none}
+.selection-item{min-width:0;overflow-wrap:anywhere}
+.selection-feedback{margin:12px 0;padding:12px;border-radius:8px;background:#f1f5f9}
+.mobile-selection-dialog .selection-heading h3{font-size:17px}
+.mobile-selection-dialog .selection-list{display:grid;gap:12px}
+.mobile-selection-dialog .selection-item{padding:16px;border:1px solid var(--border);border-radius:10px}
+.mobile-selection-dialog .selection-item p{margin-top:8px}
+.mobile-selection-dialog .selection-item .icon-button,.mobile-selection-dialog .dialog-close{min-width:44px;min-height:44px}
+.mobile-selection-dialog .btn,.mobile-selection-dialog .btn-quiet{min-height:44px}
+.mobile-selection-dialog .selection-footer{display:grid;gap:10px}
+.mobile-selection-dialog .selection-footer .btn{width:100%;margin:0}
+.selection-condition-dialog .input{min-height:44px}
+.selection-confirmation-dialog .panel{overflow-wrap:anywhere}
+@media(max-width:767px){
+  .rental-layout>.selection-panel{display:none}
+  .rental-layout{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+  .mobile-selection-bar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:50;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:#fff;box-shadow:0 -4px 16px #0f172a0d}
+  .mobile-selection-bar>.btn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:48px}
+  .mobile-selection-bar strong{font-weight:700}
+  body:has(.mobile-selection-bar) .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  body:has(input:not([type=checkbox]):not([type=radio]):focus,textarea:focus,select:focus) .mobile-selection-bar{display:none}
+  .mobile-selection-dialog.campus-dialog{width:100%;max-width:100%;max-height:88dvh;margin:auto 0 0;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .mobile-selection-dialog .dialog-header{position:sticky;top:0;z-index:1;background:#fff;min-height:68px}
+  .mobile-selection-dialog .dialog-body{padding:16px 20px 24px}
+  .mobile-selection-dialog .selection-heading{align-items:flex-start}
+  .mobile-selection-dialog .selection-heading .btn-quiet{flex-shrink:0}
+  .selection-condition-dialog .condition-fields{grid-template-columns:1fr}
+  .selection-confirmation-dialog .modal-actions,.selection-condition-dialog .modal-actions{display:grid;grid-template-columns:1fr;gap:8px}
+  .selection-confirmation-dialog .modal-actions .btn,.selection-condition-dialog .modal-actions .btn{width:100%;min-height:44px;margin:0}
+}

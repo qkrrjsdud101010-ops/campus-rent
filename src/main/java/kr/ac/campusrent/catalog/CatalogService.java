@@ -19,7 +19,7 @@ public class CatalogService {
         List<Map<String,Object>> result = new ArrayList<>();
         var specs = jdbc.queryForList("SELECT M.MODEL_ID,S.SPEC_NAME,M.SPEC_VALUE,M.VALUE_UNIT FROM MODEL_SPEC M JOIN SPEC_ITEM S ON S.SPEC_ITEM_ID=M.SPEC_ITEM_ID ORDER BY S.DISPLAY_ORDER,S.SPEC_ITEM_ID");
         var components = jdbc.queryForList("SELECT * FROM EQUIPMENT_COMPONENT ORDER BY EQUIPMENT_ID,DISPLAY_ORDER,COMPONENT_ID");
-        var alternatives = jdbc.queryForList("SELECT A.SOURCE_EQUIPMENT_ID,E.EQUIPMENT_ID,E.ASSET_CODE FROM EQUIPMENT_ALTERNATIVE A JOIN EQUIPMENT E ON E.EQUIPMENT_ID=A.TARGET_EQUIPMENT_ID WHERE A.ENABLED_YN='Y'");
+        var alternatives = jdbc.queryForList("SELECT A.SOURCE_EQUIPMENT_ID,E.EQUIPMENT_ID,E.ASSET_CODE,A.REASON_TEXT,A.DIFFERENCE_TEXT FROM EQUIPMENT_ALTERNATIVE A JOIN EQUIPMENT E ON E.EQUIPMENT_ID=A.TARGET_EQUIPMENT_ID WHERE A.ENABLED_YN='Y' ORDER BY A.SOURCE_EQUIPMENT_ID,A.TARGET_EQUIPMENT_ID");
         for(var row:jdbc.queryForList("SELECT E.*,M.MODEL_NAME,T.TYPE_NAME,T.ENABLED_YN FROM EQUIPMENT E JOIN EQUIPMENT_MODEL M ON M.MODEL_ID=E.MODEL_ID JOIN EQUIPMENT_TYPE T ON T.TYPE_ID=M.TYPE_ID ORDER BY E.EQUIPMENT_ID")) {
             long id=num(row.get("EQUIPMENT_ID"));
             var item=base("E",id,str(row.get("ASSET_CODE")),str(row.get("EQUIPMENT_NAME")),str(row.get("TYPE_NAME")),row);
@@ -30,6 +30,7 @@ public class CatalogService {
             for(var c:components) if(num(c.get("EQUIPMENT_ID"))==id) defs.add(Map.of("componentId",String.valueOf(defs.size()+1),"name",str(c.get("COMPONENT_NAME")),"requiredQuantity",num(c.get("REQUIRED_QTY")),"required",yes(c.get("REQUIRED_YN")),"body",yes(c.get("BODY_YN"))));
             item.put("components",defs); item.put("contents",defs.stream().map(c->str(c.get("name"))+" "+c.get("requiredQuantity")+"개").toList());
             item.put("alternatives",alternatives.stream().filter(a->num(a.get("SOURCE_EQUIPMENT_ID"))==id).map(a->publicId("E",num(a.get("EQUIPMENT_ID")),str(a.get("ASSET_CODE")))).toList());
+            item.put("alternativeDetails",alternatives.stream().filter(a->num(a.get("SOURCE_EQUIPMENT_ID"))==id).map(a->Map.of("id",publicId("E",num(a.get("EQUIPMENT_ID")),str(a.get("ASSET_CODE"))),"reason",str(a.get("REASON_TEXT")),"difference",str(a.get("DIFFERENCE_TEXT")))).toList());
             item.put("icon",switch(str(row.get("TYPE_NAME"))) {case "카메라"->"ff97a.svg";case "마이크"->"054e2.svg";default->"1eae3.svg";});
             result.add(item);
         }
@@ -103,6 +104,24 @@ public class CatalogService {
     private Map<String,Object> interval(Map<String,Object> r,Object start,Object end,String reason) {return Map.of("resourceId",r.get("id"),"start",time(start),"end",time(end),"approved",true,"reason",reason);}
     public Map<String,String> restrictions() {Map<String,String> result=new LinkedHashMap<>();for(var r:resources())if(!r.get("status").equals("정상"))result.put(str(r.get("id")),"현재 점검 또는 운영 제한 중입니다.");return result;}
     public List<String> purposes() {return jdbc.queryForList("SELECT PURPOSE_NAME FROM USE_PURPOSE WHERE ENABLED_YN='Y' ORDER BY PURPOSE_ID",String.class);}
+    /** Public recommendation metadata only; facility permission still comes from FACILITY_PURPOSE. */
+    public List<Map<String,Object>> purposeRules() {
+        var purposes=jdbc.queryForList("SELECT PURPOSE_ID,PURPOSE_NAME FROM USE_PURPOSE WHERE ENABLED_YN='Y' ORDER BY PURPOSE_ID");
+        var keywords=jdbc.queryForList("SELECT K.PURPOSE_ID,K.KEYWORD_TEXT,K.MATCH_MODE,K.EFFECT_CODE,K.PRIORITY_NO FROM PURPOSE_KEYWORD K JOIN USE_PURPOSE P ON P.PURPOSE_ID=K.PURPOSE_ID WHERE K.ENABLED_YN='Y' AND P.ENABLED_YN='Y' ORDER BY K.PURPOSE_ID,K.PRIORITY_NO DESC,K.KEYWORD_ID");
+        var equipment=jdbc.queryForList("SELECT R.PURPOSE_ID,T.TYPE_NAME,R.NEED_LEVEL,R.REASON_TEXT FROM PURPOSE_EQUIPMENT_RULE R JOIN USE_PURPOSE P ON P.PURPOSE_ID=R.PURPOSE_ID JOIN EQUIPMENT_TYPE T ON T.TYPE_ID=R.TYPE_ID WHERE P.ENABLED_YN='Y' AND T.ENABLED_YN='Y' ORDER BY R.PURPOSE_ID,R.DISPLAY_ORDER,R.TYPE_ID");
+        List<Map<String,Object>> result=new ArrayList<>();
+        for(var purpose:purposes) {
+            long id=num(purpose.get("PURPOSE_ID"));
+            result.add(Map.of("purposeId",String.valueOf(id),"name",str(purpose.get("PURPOSE_NAME")),
+                    "keywords",keywords.stream().filter(row->num(row.get("PURPOSE_ID"))==id).map(row->Map.<String,Object>of(
+                            "keyword",str(row.get("KEYWORD_TEXT")),"matchMode",str(row.get("MATCH_MODE")),
+                            "effect",str(row.get("EFFECT_CODE")),"priority",num(row.get("PRIORITY_NO")))).toList(),
+                    "equipment",equipment.stream().filter(row->num(row.get("PURPOSE_ID"))==id).map(row->Map.<String,Object>of(
+                            "typeName",str(row.get("TYPE_NAME")),"needLevel",str(row.get("NEED_LEVEL")),
+                            "reason",str(row.get("REASON_TEXT")))).toList()));
+        }
+        return result;
+    }
     public static long num(Object value) {if(value==null)return 0;if(value instanceof Number n)return n.longValue();try{return Long.parseLong(str(value));}catch(RuntimeException error){bad("숫자 입력을 확인해주세요.");return 0;}}
     public static String str(Object value) {return value==null?"":String.valueOf(value);}
     public static String time(Object value) {return value instanceof Timestamp t?t.toLocalDateTime().toString():str(value);}

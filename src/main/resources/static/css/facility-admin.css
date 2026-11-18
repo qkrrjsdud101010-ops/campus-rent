@@ -1,0 +1,83 @@
+.facility-management-heading,
+.facility-management-card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.facility-management .tabs { margin-top: 0; }
+.facility-management-heading .button-row { margin-top: 0; }
+.facility-management-heading .page-heading { min-width: 0; }
+.facility-management-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.facility-management-count { margin: 20px 0 12px; }
+.facility-management-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.facility-management-grid > .facility-management-card { margin: 0; }
+.facility-management-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.facility-management-card-heading > div { min-width: 0; }
+.facility-management-card h2 { font-size: 19px; line-height: 1.5; margin-top: 4px; overflow-wrap: anywhere; }
+.facility-management-card-heading > .status { flex-shrink: 0; max-width: 45%; }
+.facility-management-card > .button-row { margin-top: auto; padding-top: 4px; }
+.facility-management-card .small { overflow-wrap: anywhere; }
+.facility-management-details { margin: 0; font-size: 14px; }
+.facility-management-details > div { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 12px; margin: 8px 0; }
+.facility-management-details dt { color: var(--muted); }
+.facility-management-details dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.facility-hours-summary { list-style: none; margin: 0; padding: 0; }
+.facility-hours-summary li + li { margin-top: 4px; }
+
+.facility-editor { width: min(760px, calc(100vw - 32px)); }
+.facility-editor .field,
+.facility-editor .field-grid > div { min-width: 0; }
+.facility-editor .input { width: 100%; min-width: 0; max-width: 100%; }
+.facility-editor input[readonly] { background: #f1f5f9; color: #475569; }
+.facility-editor .check-row { min-height: 30px; overflow-wrap: anywhere; }
+.facility-editor .form-help { line-height: 1.7; }
+.facility-editor-section { min-width: 0; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px; }
+.facility-editor-section h3,
+.facility-purpose-fieldset > legend { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+.facility-editor-section > .field { margin-top: 12px; }
+.facility-hours-editor { display: grid; gap: 10px; margin-top: 16px; }
+.facility-hour-row { min-width: 0; padding: 12px 14px 14px; border: 1px solid var(--border); border-radius: 10px; margin: 0; }
+.facility-hour-row legend { padding: 0 6px; font-size: 14px; font-weight: 600; }
+.facility-hour-fields { display: grid; grid-template-columns: minmax(0, 1.15fr) repeat(2, minmax(0, 1fr)); align-items: center; gap: 12px; }
+.facility-hour-option { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; }
+.facility-hour-option input { flex-shrink: 0; }
+.facility-purpose-fieldset { border: 0; border-top: 1px solid var(--border); padding-left: 0; padding-right: 0; }
+.facility-purpose-fieldset > legend { padding: 0 8px 0 0; margin-bottom: 0; }
+.facility-purpose-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; margin-top: 8px; }
+.facility-purpose-options .check-row { margin: 6px 0; }
+.facility-purpose-options input:disabled + span { color: var(--muted); }
+.facility-editor-caption { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; overflow-wrap: anywhere; }
+.facility-editor-caption strong { font-size: 16px; }
+.facility-block-heading { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.facility-block-heading > p { font-size: 14px; line-height: 1.7; }
+.facility-block-list { display: grid; gap: 12px; margin-top: 12px; }
+.facility-block-card { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 10px; }
+.facility-block-card h3 { font-size: 14px; font-weight: 600; line-height: 1.7; overflow-wrap: anywhere; }
+.facility-block-card > p { margin-top: 8px; }
+.facility-block-reason { font-size: 14px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.facility-block-empty { padding: 24px 16px; border: 1px dashed var(--border); border-radius: 10px; font-size: 14px; }
+.facility-editor [data-facility-error] { margin-top: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.facility-editor [data-facility-save-status]:not(:empty) { margin-top: 12px; }
+.facility-editor .modal-actions { padding-top: 4px; }
+.facility-editor .modal-actions .btn { min-height: 44px; }
+
+@media (max-width: 767px) {
+  .facility-management-heading { flex-direction: column; }
+  .facility-management-heading .page-heading { margin-bottom: 0; }
+  .facility-management-heading .button-row { width: 100%; margin-bottom: 24px; }
+  .facility-management-filters,
+  .facility-management-grid { grid-template-columns: minmax(0, 1fr); }
+  .facility-hour-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+  .facility-hour-option { grid-column: 1 / -1; min-height: 36px; }
+  .facility-editor input[type=datetime-local] { font-size: 13px; }
+}
+
+@media (max-width: 420px) {
+  .facility-management-details > div { grid-template-columns: 80px minmax(0, 1fr); gap: 10px; }
+  .facility-purpose-options { grid-template-columns: minmax(0, 1fr); }
+  .facility-hour-row { padding: 10px; }
+  .facility-hour-fields { gap: 8px; }
+  .facility-editor input[type=time] { padding-left: 8px; padding-right: 8px; }
+}

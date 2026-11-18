@@ -49,7 +49,7 @@ export function renderEquipmentAdmin(container) {
   }
   if (management.ownerId !== user.id) resetManagement(user.id);
   container.innerHTML = `<section class="page-shell equipment-management">
-    <nav class="tabs" aria-label="관리자 메뉴"><a href="/admin" data-link>신청 관리</a><a href="/admin/equipment" data-link aria-current="page">장비 관리</a></nav>
+    <nav class="tabs" aria-label="관리자 메뉴"><a href="/admin" data-link>신청 관리</a><a href="/admin/equipment" data-link aria-current="page">장비 관리</a><a href="/admin/facilities" data-link>시설 운영 관리</a><a href="/admin/alternatives" data-link>대체 장비 관리</a></nav>
     <header class="equipment-management-heading"><div class="page-heading"><p class="eyebrow">CampusRent · 관리자</p><h1>장비 관리</h1><p class="muted">장비 정보와 구성품을 등록하고 대여 가능 여부를 관리하세요.</p></div><div class="button-row"><button class="btn btn-secondary" data-equipment-refresh ${management.loading ? 'disabled' : ''}>새로고침</button><button class="btn btn-primary" data-equipment-create ${management.data ? '' : 'disabled'}>장비 등록</button></div></header>
     <div class="equipment-management-tools"><button class="btn btn-secondary" data-equipment-type-create ${management.data ? '' : 'disabled'}>분류 등록</button><button class="btn btn-secondary" data-equipment-model-create ${management.data?.types.length ? '' : 'disabled'}>모델 등록</button><p class="small muted">같은 모델의 장비는 등록된 모델과 사양을 함께 사용합니다.</p></div>
     <section data-equipment-content aria-live="polite"></section>

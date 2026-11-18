@@ -8,15 +8,15 @@ export const getState=()=>clone(state);
 export function subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);}
 function emit(){for(const listener of listeners)listener(getState());}
 function save(){try{sessionStorage.setItem(key,JSON.stringify(state.selection));}catch{state.storageError='선택 내용을 임시 보관하지 못했습니다.';}emit();}
-async function api(path,{method='GET',body}={}){
-  if(method!=='GET'&&!csrf){const response=await fetch('/api/auth/csrf',{credentials:'same-origin',cache:'no-store'});if(!response.ok)throw new Error('보안 토큰을 준비하지 못했습니다.');csrf=await response.json();}
-  const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',headers:{...(body!==undefined?{'Content-Type':'application/json'}:{}),...(method!=='GET'?{[csrf.headerName]:csrf.token}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
+async function api(path,{method='GET',body,signal}={}){
+  if(method!=='GET'&&!csrf){const response=await fetch('/api/auth/csrf',{credentials:'same-origin',cache:'no-store',signal});if(!response.ok)throw new Error('보안 토큰을 준비하지 못했습니다.');csrf=await response.json();}
+  const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',signal,headers:{...(body!==undefined?{'Content-Type':'application/json'}:{}),...(method!=='GET'?{[csrf.headerName]:csrf.token}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
   const result=response.status===204?null:await response.json().catch(()=>null);
   if(!response.ok){if(response.status===401){state.user=null;state.records=[];state.equipmentStates={};csrf=null;emit();}if(response.status===403)csrf=null;const error = new Error(result?.message||'요청을 처리하지 못했습니다. 다시 확인해주세요.'); error.status = response.status; throw error;}
   return result;
 }
 async function catalog(){try{replaceCatalog(await api('/api/catalog'));state.storageError='';}catch(error){markCatalogUnavailable(error.message);state.storageError=error.message;throw error;}}
-export const ready=(async()=>{await catalog();state.user=(await api('/api/auth/me')).user;state.selection=state.selection.filter(item=>resources.some(r=>r.id===item.resourceId));if(state.user){const result=await api('/api/requests');state.records=result.records;state.equipmentStates=result.equipmentStates;}return getState();})();
+export const ready=(async()=>{await catalog();state.user=(await api('/api/auth/me')).user;if(state.user){const result=await api('/api/requests');state.records=result.records;state.equipmentStates=result.equipmentStates;}return getState();})();
 export async function refreshRecords(){await catalog();state.user=(await api('/api/auth/me')).user;if(state.user){const result=await api('/api/requests');state.records=result.records;state.equipmentStates=result.equipmentStates||{};}else{state.records=[];state.equipmentStates={};}emit();return getState();}
 export async function login(email,password){const result=await api('/api/auth/login',{method:'POST',body:{email,password}});state.user=result.user;csrf=null;await refreshRecords();return clone(state.user);}
 export async function signup(profile){const result=await api('/api/auth/signup',{method:'POST',body:profile});state.user=result.user;csrf=null;await refreshRecords();return clone(state.user);}
@@ -33,7 +33,7 @@ const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('campusr
 channel?.addEventListener('message',()=>refreshRecords().catch(()=>{}));
 export async function requestApi(path, options = {}) {
   const result = await api(path, options);
-  if (options.method && options.method.toUpperCase() !== 'GET') channel?.postMessage({changed: true});
+  if (options.notifyChanges !== false && options.method && options.method.toUpperCase() !== 'GET') channel?.postMessage({changed: true});
   return result;
 }
 async function changed(){await refreshRecords();channel?.postMessage({changed:true});}

@@ -2,6 +2,7 @@
 export const serverMode = typeof document !== "undefined" && document.documentElement.dataset.backend === "server";
 export const catalogState = { ready: !serverMode, error: "" };
 export const catalogRestrictions = {};
+export const purposeRules = [];
 export function participantAnalysis(
   input,
 ) {
@@ -414,13 +415,19 @@ export function availability(
       )
     const startTime = condition.start.slice(11, 16)
     const endTime = condition.end.slice(11, 16)
-    if (
+    const weekday = new Date(`${condition.start.slice(0, 10)}T12:00:00Z`).getUTCDay() || 7
+    const hours = resource.hoursByWeekday
+      ? resource.hoursByWeekday[String(weekday)]
+      : serverMode ? null : resource.operatingHours
+    if (!validFacilityHours(hours))
+      errors.push("선택한 요일의 운영 시간이 설정되지 않아 신청할 수 없습니다.")
+    else if (
       condition.start.slice(0, 10) !== condition.end.slice(0, 10) ||
-      startTime < resource.operatingHours[0] ||
-      endTime > resource.operatingHours[1]
+      startTime < hours[0] ||
+      endTime > hours[1]
     )
       errors.push(
-        `운영 시간 ${resource.operatingHours?.join("–")} 안에서 같은 날짜로 선택해주세요.`,
+        `운영 시간 ${hours.join("–")} 안에서 같은 날짜로 선택해주세요.`,
       )
   }
   for (const booking of bookings)
@@ -443,10 +450,9 @@ export function availability(
   return errors
 }
 export function analyzeInput(input) {
+  input = String(input || "")
   const participants = participantAnalysis(input)
-  const normalized = input
-    .toLowerCase()
-    .replace(/[\s.,!?~…·'"“”‘’()[\]{}:;_-]+/g, "")
+  const normalized = normalizeActivity(input)
   const equipmentQuery = ["카메라", "프로젝터", "마이크"].find((word) =>
     normalized.includes(word),
   )
@@ -454,7 +460,9 @@ export function analyzeInput(input) {
     normalized.includes(word),
   )
   const excludesRecording =
-    /촬영없이|영상없이|카메라없이|촬영은안|촬영안하고/.test(normalized)
+    /촬영없이|영상없이|카메라없이|촬영은안|촬영안하고|녹화없이|카메라제외|촬영제외/.test(normalized)
+  const excludesAudio = /마이크없이|녹음없이|음향없이|마이크제외/.test(normalized)
+  const excludesPresentation = /프로젝터없이|빔없이|화면없이|프로젝터제외/.test(normalized)
   const meetingResourceOnly =
     Boolean(facilityQuery === "회의실") &&
     !/학생회회의|동아리회의|조별회의|팀회의|회의하|회의준비|회의만|회의하면서|회의를|회의할/.test(
@@ -463,20 +471,37 @@ export function analyzeInput(input) {
   const meeting = !meetingResourceOnly && /회의/.test(normalized)
   const presentation = /발표|프레젠테이션|ppt/.test(normalized)
   const interview = /인터뷰/.test(normalized)
-  const videoEvidence = /영상|촬영|찍/.test(normalized)
+  const videoEvidence = /영상|촬영|찍|녹화/.test(normalized)
   const assignmentVideo =
     /과제/.test(normalized) && videoEvidence && !excludesRecording
-  const candidates = []
-  if (interview) candidates.push("인터뷰 촬영")
-  if (assignmentVideo) candidates.push("과제 영상 촬영")
-  if (meeting) candidates.push("팀 회의")
-  else if (presentation) candidates.push("발표 연습")
+  const localCandidates = []
+  if (interview) localCandidates.push("인터뷰 촬영")
+  if (assignmentVideo) localCandidates.push("과제 영상 촬영")
+  if (meeting) localCandidates.push("팀 회의")
+  else if (presentation) localCandidates.push("발표 연습")
+  const jobInterview = /면접/.test(normalized)
+  const study = /스터디(?!룸)|공부|학습|독서|시험준비/.test(normalized)
+  const seminar = /세미나|워크숍|워크샵|행사|강연|토론회|설명회|특강/.test(normalized)
+  if (jobInterview) localCandidates.push("면접 준비")
+  if (study) localCandidates.push("스터디")
+  if (seminar) localCandidates.push("세미나·행사")
+  const matched = [], excludedPurposes = new Set()
+  if (serverMode) for (const rule of purposeRules) {
+    const matching = rule.keywords.filter(keyword => keywordMatches(normalized, keyword))
+    if (matching.some(keyword => keyword.effect === "EXCLUDE")) { excludedPurposes.add(rule.name); continue; }
+    const included = matching.filter(keyword => keyword.effect === "INCLUDE")
+    if (included.length || normalized === normalizeActivity(rule.name)) matched.push({name: rule.name,
+      priority: included.length ? Math.max(...included.map(keyword => keyword.priority)) : 0})
+  }
+  matched.sort((a, b) => b.priority - a.priority)
+  const candidates = [...new Set([...matched.map(rule => rule.name), ...localCandidates])].filter(name => !excludedPurposes.has(name))
   const generalVideo =
     videoEvidence &&
     !excludesRecording &&
     !interview &&
     !assignmentVideo &&
-    !presentation
+    !presentation && !jobInterview && !study && !seminar &&
+    !(facilityQuery && normalized.replace(/\d+명/g, "") === normalizeActivity(facilityQuery))
   const intent =
     candidates.length > 1
       ? "multiple"
@@ -487,6 +512,18 @@ export function analyzeInput(input) {
           : equipmentQuery || facilityQuery
             ? "direct"
             : "unknown"
+  const activityLabel = jobInterview ? "면접 준비" : study ? "스터디" : seminar ? "세미나·행사" : candidates.length === 1 ? candidates[0] : "기타 활동"
+  const excludedEquipment = [...(excludesRecording ? ["카메라"] : []), ...(excludesAudio ? ["마이크"] : []), ...(excludesPresentation ? ["프로젝터"] : [])]
+  const proposedNeeds = {
+    space: Boolean(interview || assignmentVideo || meeting || presentation || jobInterview || study || seminar || facilityQuery || /공간|장소|시설|실내|방음|조용한/.test(normalized)),
+    video: !excludesRecording && Boolean(interview || videoEvidence || equipmentQuery === "카메라"),
+    audio: !excludesAudio && Boolean(interview || seminar || /녹음|음성|음향|마이크/.test(normalized)),
+    presentation: !excludesPresentation && Boolean(presentation || seminar || equipmentQuery === "프로젝터" || /화면공유|자료투사/.test(normalized)),
+  }
+  for (const match of matched) for (const rule of purposeRules.find(rule => rule.name === match.name)?.equipment || []) {
+    const need = equipmentNeed(rule.typeName)
+    if (need && !excludedEquipment.includes(rule.typeName) && !(need === "video" && excludesRecording) && !(need === "audio" && excludesAudio) && !(need === "presentation" && excludesPresentation)) proposedNeeds[need] = true
+  }
   return {
     candidates,
     equipmentQuery,
@@ -494,10 +531,17 @@ export function analyzeInput(input) {
     ...participants,
     normalized,
     intent,
-    excludedEquipment: excludesRecording ? ["카메라"] : [],
+    activityLabel,
+    customActivity: !legacyPurposes.includes(activityLabel),
+    proposedNeeds,
+    matchedPurposes: matched.map(rule => rule.name),
+    ruleSource: matched.length ? "catalog" : "activity",
+    excludedEquipment,
     needs: {
-      presentation: meeting && presentation,
-      audio: interview || equipmentQuery === "마이크",
+      presentation: !excludesPresentation && meeting && presentation,
+      audio: proposedNeeds.audio,
+      space: proposedNeeds.space,
+      video: proposedNeeds.video,
       indoorSpace:
         facilityQuery === "촬영실" || /실내|조용한공간|방음/.test(normalized),
     },
@@ -505,6 +549,21 @@ export function analyzeInput(input) {
       ? ["인터뷰 촬영", "과제 영상 촬영", "일반 영상 촬영"]
       : [],
   }
+}
+
+const legacyPurposes = ["인터뷰 촬영", "과제 영상 촬영", "발표 연습", "팀 회의"]
+function normalizeActivity(value) {
+  return String(value || "").toLowerCase().replace(/[\s.,!?~…·'"“”‘’()[\]{}:;_-]+/g, "")
+}
+function keywordMatches(input, rule) {
+  const keyword = normalizeActivity(rule.keyword)
+  return keyword && (rule.matchMode === "EXACT" ? input === keyword : input.includes(keyword))
+}
+function equipmentNeed(typeName) {
+  if (/카메라|캠코더/.test(typeName)) return "video"
+  if (/마이크|녹음|음향|스피커/.test(typeName)) return "audio"
+  if (/프로젝터|디스플레이|모니터/.test(typeName)) return "presentation"
+  return ""
 }
 export function purposeSubmitTarget(
   analysis,
@@ -581,7 +640,21 @@ export const recommendations = {
     },
     optional: [],
   },
+  "면접 준비": {ids: [], roles: {}, optional: [], reason: "면접을 연습할 공간을 비교하세요. 녹화·녹음이 필요하면 해당 요구를 선택하고, 시설의 실제 이용 목적은 따로 확인하세요."},
+  "스터디": {ids: [], roles: {}, optional: [], reason: "공부할 인원과 공간을 비교하세요. 발표 자료나 기록 장비는 실제 필요한 항목만 추가하세요."},
+  "세미나·행사": {ids: [], roles: {}, optional: [], reason: "인원에 맞는 공간과 자료 공유·음성 전달 장비를 비교하세요. 시설의 허용 목적과 비치 설비는 별도로 확인하세요."},
+  "기타 활동": {ids: [], roles: {}, optional: [], reason: "선택한 공간·영상·음성·자료 공유 요구를 기준으로 자원을 비교하세요. 시설 예약에는 실제 허용 목적의 선택이 필요합니다."},
 }
+
+export function recommendationDefinition(purpose, analysis = {}, options) {
+  const rule = serverMode ? purposeRules.find(rule => rule.name === purpose) : null
+  const explicitNeeds = options && Object.hasOwn(options, "needs")
+  return {title: purpose || analysis.activityLabel || "기타 활동",
+    reason: explicitNeeds ? "선택한 공간·영상·음성·자료 공유 요구를 기준으로 비교한 후보입니다. 시설 이용 목적과 신청 가능 여부는 별도로 확인하세요."
+      : rule?.equipment.length ? "등록된 목적별 장비 규칙을 기준으로 비교한 후보입니다. 시설의 허용 목적과 이용 조건도 확인하세요."
+      : recommendations[purpose]?.reason || recommendations[analysis.activityLabel]?.reason || recommendations["기타 활동"].reason}
+}
+
 export function recommendationItems(
   purpose,
   analysis,
@@ -590,8 +663,18 @@ export function recommendationItems(
   reservations = [],
   restrictions = {},
   facilityPeople,
+  options,
 ) {
+  analysis = analysis || analyzeInput("")
   const recommendation = recommendations[purpose] || { ids: [], roles: {}, optional: [] }
+  const explicitNeeds = Boolean(options && Object.hasOwn(options, "needs"))
+  const needs = Object.fromEntries(["space", "video", "audio", "presentation"].map(key => [key, explicitNeeds ? options.needs?.[key] === true : analysis.proposedNeeds?.[key] === true]))
+  const requestedUse = options && Object.hasOwn(options, "facilityUse") ? options.facilityUse
+    : facilityCondition?.use || (legacyPurposes.includes(purpose) ? purpose : "")
+  const facilityUse = typeof requestedUse === "string" && purposes.includes(requestedUse) ? requestedUse : ""
+  const facilityDraft = facilityUse && facilityCondition ? {...facilityCondition, use: facilityUse, purpose: facilityUse} : null
+  const facilityApplied = facilityDraft && !conditionErrors(facilityDraft, true).length ? facilityDraft : null
+  const spaceNeeded = explicitNeeds ? needs.space : Boolean(needs.space || facilityUse)
   const people = effectiveRecommendationPeople(
     analysis,
     facilityCondition,
@@ -600,8 +683,8 @@ export function recommendationItems(
   const facilityCandidates = resources
     .filter(
       (resource) =>
-        resource.kind === "시설" &&
-        resource.allowedUses?.includes(purpose) &&
+        spaceNeeded && resource.kind === "시설" &&
+        (!facilityUse || resource.allowedUses?.includes(facilityUse)) &&
         (!analysis.facilityQuery ||
           resource.category === analysis.facilityQuery) &&
         (!people || (resource.capacity ?? 0) >= people),
@@ -610,13 +693,30 @@ export function recommendationItems(
     .map((resource) => ({
       resource,
       role: `공간 후보 · 수용 ${resource.capacity}명 · ${
-        purpose === "팀 회의" ? "회의 용도" : "활동 용도"
+        facilityUse ? `허용 목적: ${facilityUse}` : "실제 이용 목적 선택 필요"
       }`,
       optional: purpose === "인터뷰 촬영" || purpose === "과제 영상 촬영",
+      condition: facilityApplied,
+      conditionRequired: !facilityApplied,
+      source: explicitNeeds ? "user-needs" : "activity",
     }))
 
   const categories = []
-  if (purpose === "인터뷰 촬영") {
+  const registered = serverMode ? purposeRules.find(rule => rule.name === purpose)?.equipment || [] : []
+  const addCategory = (category, optional, role, source) => {
+    if (!categories.some(item => item.category === category)) categories.push({category, optional, role, source})
+  }
+  if (explicitNeeds) {
+    const names = {video: "카메라", audio: "마이크", presentation: "프로젝터"}
+    const roles = {video: "영상 기록", audio: "음성 기록·전달", presentation: "발표 자료 공유"}
+    for (const need of ["video", "audio", "presentation"]) if (needs[need]) {
+      const rules = registered.filter(rule => equipmentNeed(rule.typeName) === need)
+      if (rules.length) for (const rule of rules) addCategory(rule.typeName, rule.needLevel === "OPTIONAL", `요청 · ${rule.reason || roles[need]}`, "user-needs")
+      else addCategory(names[need], false, `요청 · ${roles[need]}`, "user-needs")
+    }
+  } else if (serverMode) {
+    for (const rule of registered) addCategory(rule.typeName, rule.needLevel === "OPTIONAL", `${rule.needLevel === "OPTIONAL" ? "선택" : "필요"} · ${rule.reason || "등록된 목적별 장비"}`, "catalog-rule")
+  } else if (purpose === "인터뷰 촬영") {
     categories.push(
       { category: "카메라", optional: false, role: "필요 · 인터뷰 장면 기록" },
       { category: "마이크", optional: false, role: "필요 · 참여자 음성 녹음" },
@@ -626,16 +726,22 @@ export function recommendationItems(
       { category: "카메라", optional: false, role: "필요 · 과제 영상 촬영" },
       { category: "마이크", optional: true, role: "선택 · 대사·음성 녹음" },
     )
-  } else if (purpose === "발표 연습" || analysis.needs.presentation) {
+  } else if (purpose === "발표 연습" || analysis.needs?.presentation) {
     categories.push({
       category: "프로젝터",
       optional: true,
       role: "선택 · 발표 자료 투사",
     })
   }
+  if (!explicitNeeds && !serverMode && !legacyPurposes.includes(purpose)) {
+    if (needs.video) addCategory("카메라", false, "필요 · 활동 영상 기록", "activity")
+    if (needs.audio) addCategory("마이크", true, "선택 · 음성 기록·전달", "activity")
+    if (needs.presentation) addCategory("프로젝터", true, "선택 · 자료 공유", "activity")
+  }
   if (
+    !explicitNeeds &&
     analysis.equipmentQuery &&
-    !analysis.excludedEquipment.includes(analysis.equipmentQuery) &&
+    !(analysis.excludedEquipment || []).includes(analysis.equipmentQuery) &&
     !categories.some(({ category }) => category === analysis.equipmentQuery)
   )
     categories.push({
@@ -644,7 +750,7 @@ export function recommendationItems(
       role: "선택 · 입력한 활동 설명에 포함된 장비",
     })
 
-  const equipmentItems = categories.flatMap(({ category, optional, role }) => {
+  const equipmentItems = categories.filter(({category}) => explicitNeeds || !(analysis.excludedEquipment || []).some(excluded => category === excluded || equipmentNeed(category) && equipmentNeed(category) === equipmentNeed(excluded))).flatMap(({ category, optional, role, source }) => {
     const candidates = resources.filter(
       (resource) => resource.kind === "장비" && resource.category === category,
     )
@@ -663,7 +769,7 @@ export function recommendationItems(
           candidate.status === "정상" && !restrictions[candidate.id],
       ) ??
       candidates[0]
-    return resource ? [{ resource, role, optional }] : []
+    return resource ? [{ resource, role, optional, condition: equipmentCondition || null, conditionRequired: !equipmentCondition, source: source || "demo-rule" }] : []
   })
   const preferredIds = new Set(recommendation.ids)
   return [...facilityCandidates, ...equipmentItems].sort((a, b) => {
@@ -740,6 +846,16 @@ export function markCatalogUnavailable(message = "최신 자원 정보를 불러
   catalogState.error = message;
 }
 
+function validFacilityHours(value, allowEmpty = false) {
+  return Array.isArray(value) && ((allowEmpty && value.length === 0) ||
+    (value.length === 2 && value.every(time => typeof time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)) && value[0] < value[1]));
+}
+
+function validFacilityWeekdays(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) &&
+    Object.entries(value).every(([day, hours]) => /^[1-7]$/.test(day) && validFacilityHours(hours));
+}
+
 export function replaceCatalog(payload) {
   if (!payload || !Array.isArray(payload.resources) || !Array.isArray(payload.purposes) || !Array.isArray(payload.reservations))
     throw new Error("서버의 자원 목록 응답을 확인할 수 없습니다.");
@@ -748,7 +864,8 @@ export function replaceCatalog(payload) {
     if (!resource || typeof resource.id !== "string" || !resource.id || ids.has(resource.id) || !["장비", "시설"].includes(resource.kind) || typeof resource.name !== "string" || typeof resource.rentable !== "boolean" || !["정상", "점검", "중지"].includes(resource.status))
       throw new Error("서버의 자원 정보가 올바르지 않습니다. 관리자에게 확인해주세요.");
     ids.add(resource.id);
-    if (resource.kind === "시설" && (!Number.isSafeInteger(resource.capacity) || resource.capacity < 1 || !Array.isArray(resource.operatingHours) || resource.operatingHours.length !== 2 || resource.operatingHours.some(time => !/^\d{2}:\d{2}$/.test(time))))
+    if (resource.kind === "시설" && (!Number.isSafeInteger(resource.capacity) || resource.capacity < 1 || !validFacilityHours(resource.operatingHours, true) ||
+      (Object.hasOwn(resource, "hoursByWeekday") && !validFacilityWeekdays(resource.hoursByWeekday))))
       throw new Error("시설의 인원·운영 시간 정보를 확인할 수 없습니다.");
     const stringList = value => Array.isArray(value) ? value.filter(item => typeof item === "string") : [];
     const fallbackIcon = resource.kind === "시설" ? "8f64d.svg" : resource.category === "마이크" ? "054e2.svg" : resource.category === "프로젝터" ? "1eae3.svg" : "ff97a.svg";
@@ -763,6 +880,7 @@ export function replaceCatalog(payload) {
     };
   });
   const nextPurposes = [...new Set(payload.purposes.filter(purpose => typeof purpose === "string" && purpose.trim()).map(purpose => purpose.trim()))];
+  const nextPurposeRules = parsePurposeRules(payload.purposeRules, nextPurposes);
   const nextBookings = payload.reservations.map(booking => {
     if (!booking || typeof booking.resourceId !== "string" || typeof booking.start !== "string" || typeof booking.end !== "string" || !Number.isFinite(new Date(booking.start).getTime()) || new Date(booking.end) <= new Date(booking.start))
       throw new Error("이용 제한 일정 응답을 확인할 수 없습니다.");
@@ -774,11 +892,37 @@ export function replaceCatalog(payload) {
   for (const [id, reason] of Object.entries(payload.restrictions || {})) if (typeof reason === "string" && reason) nextRestrictions[id] = reason;
   resources.splice(0, resources.length, ...nextResources);
   purposes.splice(0, purposes.length, ...nextPurposes);
+  purposeRules.splice(0, purposeRules.length, ...nextPurposeRules);
   bookings.splice(0, bookings.length, ...nextBookings);
   for (const id of Object.keys(catalogRestrictions)) delete catalogRestrictions[id];
   Object.assign(catalogRestrictions, nextRestrictions);
   catalogState.ready = true;
   catalogState.error = "";
+}
+
+function parsePurposeRules(value, names) {
+  if (value === undefined) return [];
+  const invalid = () => { throw new Error("목적별 추천 규칙 응답을 확인할 수 없습니다."); };
+  if (!Array.isArray(value)) return invalid();
+  const ids = new Set(), usedNames = new Set();
+  return value.map(rule => {
+    if (!rule || typeof rule.purposeId !== "string" || !rule.purposeId || ids.has(rule.purposeId) ||
+      typeof rule.name !== "string" || !names.includes(rule.name) || usedNames.has(rule.name) ||
+      !Array.isArray(rule.keywords) || !Array.isArray(rule.equipment)) return invalid();
+    ids.add(rule.purposeId); usedNames.add(rule.name);
+    const keywords = rule.keywords.map(entry => {
+      if (!entry || typeof entry.keyword !== "string" || !entry.keyword.trim() ||
+        !["CONTAINS", "EXACT"].includes(entry.matchMode) || !["INCLUDE", "EXCLUDE"].includes(entry.effect) ||
+        !Number.isSafeInteger(entry.priority) || entry.priority < 0) return invalid();
+      return {keyword: entry.keyword, matchMode: entry.matchMode, effect: entry.effect, priority: entry.priority};
+    });
+    const equipment = rule.equipment.map(entry => {
+      if (!entry || typeof entry.typeName !== "string" || !entry.typeName.trim() ||
+        !["REQUIRED", "OPTIONAL"].includes(entry.needLevel) || typeof entry.reason !== "string") return invalid();
+      return {typeName: entry.typeName, needLevel: entry.needLevel, reason: entry.reason};
+    });
+    return {purposeId: rule.purposeId, name: rule.name, keywords, equipment};
+  });
 }
 
 if (serverMode) {

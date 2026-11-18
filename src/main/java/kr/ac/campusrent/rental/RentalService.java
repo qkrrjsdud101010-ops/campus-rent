@@ -21,28 +21,34 @@ public class RentalService {
         Object[] args="admin".equals(user.role())?new Object[]{}:new Object[]{Long.parseLong(user.id())};
         for(var head:jdbc.queryForList("SELECT R.*,U.USER_NAME FROM RENT_REQUEST R JOIN APP_USER U ON U.USER_ID=R.APPLICANT_ID"+where+" ORDER BY R.REQUESTED_AT DESC,R.REQUEST_ID DESC",args)){
             Map<String,Object> record=new LinkedHashMap<>();record.put("number",str(head.get("REQUEST_NO")));record.put("userId",str(head.get("APPLICANT_ID")));record.put("userName",str(head.get("USER_NAME")));record.put("createdAt",time(head.get("REQUESTED_AT")));
-            List<Map<String,Object>> items=new ArrayList<>();for(var row:jdbc.queryForList("SELECT * FROM REQUEST_ITEM WHERE REQUEST_ID=? ORDER BY ITEM_NO",num(head.get("REQUEST_ID"))))items.add(view(row));record.put("items",items);records.add(record);
+            List<Map<String,Object>> items=new ArrayList<>();for(var row:jdbc.queryForList("SELECT * FROM REQUEST_ITEM WHERE REQUEST_ID=? ORDER BY ITEM_NO",num(head.get("REQUEST_ID"))))items.add(view(row,"admin".equals(user.role())));record.put("items",items);records.add(record);
         }
         Map<String,Object> equipmentStates=new LinkedHashMap<>();for(var r:catalog.resources())if("장비".equals(r.get("kind")))equipmentStates.put(str(r.get("id")),Map.of("status",r.get("status"),"version",r.get("version")));
         return Map.of("records",records,"equipmentStates",equipmentStates);
     }
-    @SuppressWarnings("unchecked") private Map<String,Object> view(Map<String,Object> row){
+    @SuppressWarnings("unchecked") private Map<String,Object> view(Map<String,Object> row, boolean includeInternalNotes){
         String kind=str(row.get("ITEM_KIND"));long itemId=num(row.get("REQUEST_ITEM_ID"));
         var resource=catalog.resourceByDb(kind,num(row.get(kind.equals("E")?"EQUIPMENT_ID":"FACILITY_ID")));
         Map<String,Object> item=new LinkedHashMap<>(resource);item.put("resourceId",resource.get("id"));item.put("id",String.valueOf(itemId));item.put("originalIndex",num(row.get("ITEM_NO")));item.put("version",num(row.get("ROW_VERSION")));
         item.put("status",statusLabel(kind,str(row.get("STATUS_CODE"))));
+        item.put("statusCode",str(row.get("STATUS_CODE")));
         String purpose=row.get("PURPOSE_ID")==null?"":jdbc.queryForObject("SELECT PURPOSE_NAME FROM USE_PURPOSE WHERE PURPOSE_ID=?",String.class,num(row.get("PURPOSE_ID")));
         item.put("condition",Map.of("start",time(row.get("USE_START_AT")),"end",time(row.get("USE_END_AT")),"people",row.get("PEOPLE_COUNT")==null?1:num(row.get("PEOPLE_COUNT")),"use",purpose,"purpose",purpose));
         List<Map<String,Object>> history=new ArrayList<>();String reason="";
         for(var log:jdbc.queryForList("SELECT * FROM REQUEST_STATUS_LOG WHERE REQUEST_ITEM_ID=? ORDER BY CHANGED_AT,STATUS_LOG_ID",itemId)){
-            String next=str(log.get("TO_STATUS"));reason=str(log.get("REASON_TEXT"));
-            history.add(Map.of("action",next,"at",time(log.get("CHANGED_AT")),"from",log.get("FROM_STATUS")==null?"":statusLabel(kind,str(log.get("FROM_STATUS"))),"to",statusLabel(kind,next),"actor","처리 담당자","reason",reason));
+            String next=str(log.get("TO_STATUS"));
+            boolean publicRejection="REJECTED".equals(next)&&"PENDING".equals(log.get("FROM_STATUS"));
+            String visibleReason=includeInternalNotes||publicRejection?str(log.get("REASON_TEXT")):"";
+            if(includeInternalNotes||publicRejection) reason=visibleReason;
+            history.add(Map.of("action",next,"at",time(log.get("CHANGED_AT")),"from",log.get("FROM_STATUS")==null?"":statusLabel(kind,str(log.get("FROM_STATUS"))),"to",statusLabel(kind,next),"actor","처리 담당자","reason",visibleReason));
         }
         item.put("history",history);item.put("reason",reason);item.put("inspections",List.of());item.put("returnedComponents",Map.of());
         if(kind.equals("E")){
             var checkouts=jdbc.queryForList("SELECT * FROM EQUIPMENT_CHECKOUT WHERE REQUEST_ITEM_ID=?",itemId);
             if(!checkouts.isEmpty()){
                 var checkout=checkouts.getFirst();long checkoutId=num(checkout.get("CHECKOUT_ID"));item.put("name",str(checkout.get("EQUIPMENT_NAME_SNAPSHOT")));item.put("code",str(checkout.get("ASSET_CODE_SNAPSHOT")));item.put("checkoutAt",time(checkout.get("ACTUAL_CHECKOUT_AT")));
+                item.put("checkoutSource",str(checkout.get("SOURCE_CODE")));
+                item.put("checkoutRegisteredAt",time(checkout.get("REGISTERED_AT")));
                 List<Map<String,Object>> definitions=new ArrayList<>();for(var c:jdbc.queryForList("SELECT * FROM CHECKOUT_COMPONENT WHERE CHECKOUT_ID=? ORDER BY COMPONENT_SEQ",checkoutId))definitions.add(Map.of("componentId",str(c.get("COMPONENT_SEQ")),"name",str(c.get("COMPONENT_NAME")),"requiredQuantity",num(c.get("REQUIRED_QTY")),"quantity",num(c.get("DELIVERED_QTY")),"required","Y".equals(c.get("REQUIRED_YN")),"body","Y".equals(c.get("BODY_YN")),"condition","NORMAL".equals(c.get("OUT_CONDITION"))?"정상":"손상"));item.put("checkoutComponents",definitions);
                 Map<String,Integer> returned=new LinkedHashMap<>();List<Map<String,Object>> rounds=new ArrayList<>();
                 for(var inspection:jdbc.queryForList("SELECT * FROM RETURN_INSPECTION WHERE CHECKOUT_ID=? ORDER BY INSPECTION_ROUND",checkoutId)){
@@ -50,7 +56,9 @@ public class RentalService {
                     for(var c:jdbc.queryForList("SELECT * FROM RETURN_COMPONENT WHERE CHECKOUT_ID=? AND INSPECTION_ROUND=? ORDER BY COMPONENT_SEQ",checkoutId,round)){
                         String id=str(c.get("COMPONENT_SEQ"));int quantity=Math.toIntExact(num(c.get("RETURNED_QTY")));returned.merge(id,quantity,Integer::sum);
                         var d=definitions.stream().filter(def->id.equals(def.get("componentId"))).findFirst().orElseThrow();
-                        components.add(Map.of("componentId",id,"name",d.get("name"),"quantity",quantity,"cumulativeQuantity",returned.get(id),"missingQuantity",num(d.get("quantity"))-returned.get(id),"condition","DAMAGED".equals(c.get("RETURN_CONDITION"))?"손상":"정상","note",str(c.get("NOTE_TEXT"))));
+                        Map<String,Object> component=new LinkedHashMap<>(Map.of("componentId",id,"name",d.get("name"),"quantity",quantity,"cumulativeQuantity",returned.get(id),"missingQuantity",num(d.get("quantity"))-returned.get(id),"condition","DAMAGED".equals(c.get("RETURN_CONDITION"))?"손상":"정상"));
+                        if(includeInternalNotes) component.put("note",str(c.get("NOTE_TEXT")));
+                        components.add(component);
                     }
                     String hold=str(inspection.get("HOLD_REASON"));rounds.add(Map.of("round",round,"at",time(inspection.get("INSPECTED_AT")),"actor","관리자","reason",hold,"status","HOLD".equals(inspection.get("OUTCOME_CODE"))?"반납 보류":"반납 완료","components",components));
                     if("RETURN_HELD".equals(row.get("STATUS_CODE")))item.put("reason",hold);
@@ -108,7 +116,7 @@ public class RentalService {
             case "maintenance-done"->{requireKind(kind,"E");requireState(from,"RETURNED");if(!"점검".equals(resource.get("status"))||outstanding(resourceId,0)||!Boolean.TRUE.equals(resource.get("rentable")))throw conflict("반환 해결과 점검 중 상태를 확인해주세요.");if(reason.isBlank()||!Boolean.TRUE.equals(details.get("confirmed")))throw bad("점검 완료 확인과 메모를 입력해주세요.");setEquipment(resourceId,id,user,"NORMAL",reason);}
             default->throw bad("지원하지 않는 처리입니다.");
         }
-        if(jdbc.update("UPDATE REQUEST_ITEM SET STATUS_CODE=?,ROW_VERSION=ROW_VERSION+1,UPDATED_AT=LOCALTIMESTAMP WHERE REQUEST_ITEM_ID=? AND ROW_VERSION=?",to,id,version)!=1)throw conflict("최신 신청 상태를 다시 확인해주세요.");log(id,from,to,user,reason);return Map.of("item",view(jdbc.queryForMap("SELECT * FROM REQUEST_ITEM WHERE REQUEST_ITEM_ID=?",id)));
+        if(jdbc.update("UPDATE REQUEST_ITEM SET STATUS_CODE=?,ROW_VERSION=ROW_VERSION+1,UPDATED_AT=LOCALTIMESTAMP WHERE REQUEST_ITEM_ID=? AND ROW_VERSION=?",to,id,version)!=1)throw conflict("최신 신청 상태를 다시 확인해주세요.");log(id,from,to,user,reason);return Map.of("item",view(jdbc.queryForMap("SELECT * FROM REQUEST_ITEM WHERE REQUEST_ITEM_ID=?",id),"admin".equals(user.role())));
     }
     @SuppressWarnings("unchecked") private List<Component> baseComponents(Map<String,Object> resource){return ((List<Map<String,Object>>)resource.get("components")).stream().map(c->new Component(str(c.get("componentId")),str(c.get("name")),Math.toIntExact(num(c.get("requiredQuantity"))),Math.toIntExact(num(c.get("requiredQuantity"))),Boolean.TRUE.equals(c.get("required")),Boolean.TRUE.equals(c.get("body")))).toList();}
     private List<Component> snapshotComponents(long checkoutId){return jdbc.queryForList("SELECT * FROM CHECKOUT_COMPONENT WHERE CHECKOUT_ID=? ORDER BY COMPONENT_SEQ",checkoutId).stream().map(c->new Component(str(c.get("COMPONENT_SEQ")),str(c.get("COMPONENT_NAME")),Math.toIntExact(num(c.get("REQUIRED_QTY"))),Math.toIntExact(num(c.get("DELIVERED_QTY"))),"Y".equals(c.get("REQUIRED_YN")),"Y".equals(c.get("BODY_YN")))).toList();}

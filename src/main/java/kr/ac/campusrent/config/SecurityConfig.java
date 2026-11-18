@@ -28,8 +28,8 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()));
         http.securityContext(config -> config.securityContextRepository(contexts).requireExplicitSave(true));
         http.authorizeHttpRequests(config -> config
-                .requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/auth/csrf", "/api/catalog").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/auth/csrf", "/api/catalog", "/api/recommendations/analysis-capabilities").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup", "/api/recommendations/analyze").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll());

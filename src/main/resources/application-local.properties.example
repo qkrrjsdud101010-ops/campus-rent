@@ -15,3 +15,16 @@ campus.bootstrap.enabled=false
 campus.bootstrap.admin.email=
 campus.bootstrap.admin.password=
 campus.seed-demo-catalog=false
+
+# Optional GPT sentence analysis; keep credentials in this ignored local file or env.
+# Only the activity sentence is sent. Existing account/request records are not sent.
+# Set enabled=true only after configuring a key with access to the selected model.
+campus.analysis.enabled=false
+campus.analysis.provider=openai
+campus.analysis.openai.api-key=${OPENAI_API_KEY:}
+campus.analysis.openai.model=gpt-5.4-mini
+# Optional legacy Gemini settings; used only when provider=gemini.
+campus.analysis.api-key=${GEMINI_API_KEY:}
+campus.analysis.model=gemini-3.1-flash-lite
+campus.analysis.timeout-ms=8000
+campus.analysis.max-calls-per-minute=20
